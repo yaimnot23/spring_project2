@@ -27,7 +27,7 @@ public class BoardController {
 	// URL: /board/list
 	@GetMapping("/list")
 	public void list(Model model) {
-		log.info("list 요청...");
+		log.info("list 요청");
 		// 서비스를 통해 게시글 목록을 가져와서 "list"라는 이름으로 화면(JSP)에 전달
 		model.addAttribute("list", service.getList());
 	}
@@ -37,7 +37,7 @@ public class BoardController {
 	@GetMapping("/register")
 	public void register() {
 		// 단순히 입력 화면(/board/register.jsp)만 보여줌
-		log.info("register 페이지 이동...");
+		log.info("register 페이지 이동");
 	}
 	
 	// 3. 글 등록 처리 (POST)
