@@ -117,7 +117,7 @@ $(document).ready(function() {
     });
     
 });
-<jsp:include page="./layout/footer.jsp" />
+<jsp:include page="../layout/footer.jsp" />
 </script>
 
 </body>
