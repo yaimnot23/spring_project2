@@ -1,0 +1,25 @@
+database : springdb
+username : springuser
+pw : mysql
+
+-- 1. 데이터베이스 생성 (이름: springdb)
+CREATE DATABASE IF NOT EXISTS springdb DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- 2. 사용자 생성 (아이디: springuser, 비밀번호: mysql)
+-- 'localhost'는 DB와 웹 서버가 같은 컴퓨터에 있을 때 사용합니다.
+CREATE USER IF NOT EXISTS 'springuser'@'localhost' IDENTIFIED BY 'mysql';
+
+GRANT ALL PRIVILEGES ON springdb.* TO 'springuser'@'localhost';
+
+FLUSH PRIVILEGES;
+
+CREATE TABLE IF NOT EXISTS board (
+    bno INT NOT NULL AUTO_INCREMENT COMMENT '게시글 번호(PK)',
+    title VARCHAR(200) NOT NULL COMMENT '제목',
+    content TEXT COMMENT '내용',
+    writer VARCHAR(50) NOT NULL COMMENT '작성자',
+    read_count INT DEFAULT 0 COMMENT '조회수',
+    is_del CHAR(1) DEFAULT 'N' COMMENT '삭제여부(Y/N)',
+    reg_date DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '작성일',
+    PRIMARY KEY (bno)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

@@ -1,0 +1,15 @@
+# 이클립스(Eclipse) 설정 파일 무시
+.classpath
+.project
+.settings/
+.springBeans
+bin/
+
+# 메이븐(Maven) 빌드 결과물 무시 (가장 중요)
+target/
+
+# 로그 파일 무시
+*.log
+
+# Mac 사용시 생기는 시스템 파일 무시
+.DS_Store
