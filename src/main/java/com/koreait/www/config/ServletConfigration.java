@@ -17,7 +17,7 @@ public class ServletConfigration implements WebMvcConfigurer{
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		// 외부 경로 설정
-		registry.addResourceHandler("/resources/**").addResourceLocations("/recources/");
+		registry.addResourceHandler("/resources/**").addResourceLocations("/resources/");
 	}
 	
 	@Override
