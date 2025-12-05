@@ -84,7 +84,7 @@ public class BoardController {
 	// URL: /board/remove
 	@PostMapping("/remove")
 	public String remove(@RequestParam("bno") Long bno, RedirectAttributes rttr) {
-		log.info("remove 삭제 처리... 번호: " + bno);
+		log.info("remove 삭제 처리 번호: " + bno);
 		
 		// 삭제 성공 시 result에 success 담아서 목록으로 이동
 		if (service.remove(bno)) {
