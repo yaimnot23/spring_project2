@@ -13,3 +13,6 @@ target/
 
 # Mac 사용시 생기는 시스템 파일 무시
 .DS_Store
+
+# DB 설정 파일 무시
+database.properties
