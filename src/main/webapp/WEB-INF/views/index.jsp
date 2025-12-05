@@ -1,39 +1,79 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>메인 페이지</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DevLog Home</title>
     
-    <link href="/resources/css/bootstrap.min.css" rel="stylesheet">
-    
-    <script src="/resources/js/bootstrap.bundle.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
     <style>
-        .main-box { text-align: center; margin-top: 50px; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .hero-section {
+            background: white;
+            padding: 120px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 2rem;
+        }
+        .btn-custom-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            transition: all 0.3s;
+        }
+        .btn-custom-primary:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+        }
     </style>
 </head>
 <body>
 
-<jsp:include page="./layout/header.jsp" />
-
-<div class="container">
-    <div class="p-5 mb-4 bg-light rounded-3 main-box">
-        <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold">Welcome Spring Project!</h1>
-            <p class="col-md-8 fs-4" style="margin: 0 auto;">스프링 MVC 게시판 프로젝트 메인 화면입니다.</p>
-            <p>현재 서버 시간: <strong>${serverTime}</strong></p>
-            
-            <hr class="my-4">
-            
-            <a href="/board/list" class="btn btn-primary btn-lg" type="button">게시판 목록 보러가기 &raquo;</a>
-            <button class="btn btn-secondary btn-lg" disabled>회원 관리 (준비중)</button>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/www/"><i class="fa-solid fa-code text-primary"></i> My DevLog</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/www/board/list">게시판</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">로그인</a></li>
+                </ul>
+            </div>
         </div>
-    </div>
-</div>
-<jsp:include page="./layout/footer.jsp" />
+    </nav>
+
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Welcome to Spring World</h1>
+            <p class="lead text-muted mb-4">
+                스프링 프레임워크 학습 기록과 개발 일지를 남기는 공간입니다.<br>
+                깔끔하고 직관적인 카드형 게시판을 확인해보세요.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/www/board/list" class="btn btn-custom-primary btn-lg px-5 rounded-pill fw-bold">
+                    <i class="fa-solid fa-list"></i> 게시글 보러가기
+                </a>
+                <a href="#" class="btn btn-outline-dark btn-lg px-5 rounded-pill">
+                    <i class="fa-brands fa-github"></i> GitHub
+                </a>
+            </div>
+            
+            <div class="mt-5 p-3 d-inline-block bg-light rounded text-muted small border">
+                <i class="fa-regular fa-clock"></i> Server Time: <strong>${serverTime}</strong>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
