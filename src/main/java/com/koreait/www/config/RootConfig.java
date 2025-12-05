@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 @Configuration
 @EnableTransactionManagement
@@ -47,6 +48,11 @@ public class RootConfig {
 		
 		return new HikariDataSource(hikariConfig);
 	}
+	
+	@Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
 	
 	@Bean
 	public SqlSessionFactory sqlSessionFactory() throws Exception {
