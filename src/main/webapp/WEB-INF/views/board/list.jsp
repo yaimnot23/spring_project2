@@ -26,7 +26,8 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             transition: all 0.3s ease;
             cursor: pointer;
-            height: 100%; /* 카드 높이 통일 */
+            height: 100%;
+            /* 카드 높이 통일 */
         }
         /* 마우스 올렸을 때 효과 */
         .card:hover {
@@ -80,28 +81,15 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-5 sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/www/"><i class="fa-solid fa-code text-primary"></i> My DevLog</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active fw-bold" href="/www/board/list">게시판</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">로그인</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <jsp:include page="../layout/header.jsp" />
 
-    <div class="container pb-5">
+    <div class="container pb-5" style="margin-top: 50px;">
         <div class="d-flex justify-content-between align-items-end mb-4 px-2">
             <div>
                 <h2 class="fw-bold m-0"><i class="fa-solid fa-layer-group text-primary"></i> 최신 글 목록</h2>
                 <small class="text-muted">개발 지식과 경험을 공유하는 공간입니다.</small>
             </div>
-            <a href="/www/board/register" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold">
+            <a href="${pageContext.request.contextPath}/board/register" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold">
                 <i class="fa-solid fa-pen me-1"></i> 글쓰기
             </a>
         </div>
@@ -110,14 +98,14 @@
             
             <c:forEach items="${list}" var="board">
                 <div class="col">
-                    <div class="card h-100" onclick="location.href='/www/board/get?bno=${board.bno}'">
+                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}'">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="writer-badge">
                                     <i class="fa-regular fa-user me-1"></i> ${board.writer}
                                 </span>
                                 <small class="text-muted">
-                                    <i class="fa-regular fa-eye me-1"></i> ${board.read_count}
+                                    <i class="fa-regular fa-eye me-1"></i> ${board.readCount}
                                 </small>
                             </div>
                             
@@ -129,8 +117,8 @@
                         <div class="card-footer">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="meta-text">
-                                    <i class="fa-regular fa-clock me-1"></i> 
-                                    <fmt:formatDate value="${board.reg_date}" pattern="yyyy-MM-dd"/>
+                                     <i class="fa-regular fa-clock me-1"></i> 
+                                     <fmt:formatDate value="${board.regDate}" pattern="yyyy-MM-dd"/>
                                 </span>
                                 <span class="text-primary fw-bold" style="font-size: 0.9rem;">
                                     Read More <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -140,7 +128,9 @@
                     </div>
                 </div>
             </c:forEach>
-            </div> <c:if test="${empty list}">
+        </div> 
+        
+        <c:if test="${empty list}">
             <div class="text-center py-5 my-5 bg-white rounded shadow-sm">
                 <i class="fa-regular fa-folder-open fa-3x text-secondary mb-3"></i>
                 <h5 class="text-muted">등록된 게시글이 없습니다.</h5>

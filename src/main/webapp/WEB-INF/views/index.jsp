@@ -39,13 +39,14 @@
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/www/"><i class="fa-solid fa-code text-primary"></i> My DevLog</a>
+            <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/"><i class="fa-solid fa-code text-primary"></i> My DevLog</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/www/board/list">게시판</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/board/list">게시판</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">로그인</a></li>
                 </ul>
             </div>
@@ -60,7 +61,7 @@
                 깔끔하고 직관적인 카드형 게시판을 확인해보세요.
             </p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="/www/board/list" class="btn btn-custom-primary btn-lg px-5 rounded-pill fw-bold">
+                <a href="${pageContext.request.contextPath}/board/list" class="btn btn-custom-primary btn-lg px-5 rounded-pill fw-bold">
                     <i class="fa-solid fa-list"></i> 게시글 보러가기
                 </a>
                 <a href="#" class="btn btn-outline-dark btn-lg px-5 rounded-pill">

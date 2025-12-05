@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @Slf4j
-@RequestMapping("/board/*") // 1. 기본 URL 설정 (/board/list, /board/register 등)
+@RequestMapping("/board") // 1. 기본 URL 설정 (/board/list, /board/register 등)
 @RequiredArgsConstructor     // 2. final이 붙은 필드만 생성자 주입 (Service 주입용)
 public class BoardController {
 
