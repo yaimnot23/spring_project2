@@ -3,33 +3,58 @@
 
 <mapper namespace="com.koreait.www.repository.BoardMapper">
 
-	<select id="getList" resultType="BoardVO">
-		SELECT * FROM board WHERE bno > 0 ORDER BY bno DESC
-	</select>
+    <sql id="criteria">
+        <if test="type != null and keyword != null">
+            <trim prefix="AND (" suffix=")" prefixOverrides="OR">
+                <foreach item="type" collection="typeArr">
+                    <trim prefix="OR">
+                        <choose>
+                            <when test="type == 'T'.toString()">
+                                title LIKE concat('%', #{keyword}, '%')
+                            </when>
+                            <when test="type == 'C'.toString()">
+                                content LIKE concat('%', #{keyword}, '%')
+                            </when>
+                            <when test="type == 'W'.toString()">
+                                writer LIKE concat('%', #{keyword}, '%')
+                            </when>
+                        </choose>
+                    </trim>
+                </foreach>
+            </trim>
+        </if>
+    </sql>
 
-	<insert id="insertSelectKey">
-		<selectKey keyProperty="bno" order="BEFORE" resultType="long">
-			SELECT count(*) + 1 FROM board </selectKey>
-		
-		INSERT INTO board (title, content, writer)
-		VALUES (#{title}, #{content}, #{writer})
-	</insert>
+    <select id="getList" resultType="BoardVO">
+        SELECT * FROM board 
+        WHERE bno > 0 
+        <include refid="criteria"></include> 
+        ORDER BY bno DESC
+    </select>
+
+    <insert id="insertSelectKey">
+        <selectKey keyProperty="bno" order="AFTER" resultType="long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO board (title, content, writer)
+        VALUES (#{title}, #{content}, #{writer})
+    </insert>
     
     <select id="read" resultType="BoardVO">
-		SELECT * FROM board WHERE bno = #{bno}
-	</select>
+        SELECT * FROM board WHERE bno = #{bno}
+    </select>
 
-	<delete id="delete">
-		DELETE FROM board WHERE bno = #{bno}
-	</delete>
+    <delete id="delete">
+        DELETE FROM board WHERE bno = #{bno}
+    </delete>
 
-	<update id="update">
-		UPDATE board
-		SET title = #{title},
-		content = #{content},
-		writer = #{writer},
-		reg_date = now()
-		WHERE bno = #{bno}
-	</update>
+    <update id="update">
+        UPDATE board
+        SET title = #{title},
+        content = #{content},
+        writer = #{writer},
+        reg_date = now()
+        WHERE bno = #{bno}
+    </update>
 
 </mapper>

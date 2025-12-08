@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
     <style>
         body {
@@ -27,7 +28,6 @@
             transition: all 0.3s ease;
             cursor: pointer;
             height: 100%;
-            /* 카드 높이 통일 */
         }
         /* 마우스 올렸을 때 효과 */
         .card:hover {
@@ -42,8 +42,6 @@
             font-size: 1.15rem;
             color: #333;
             margin-bottom: 0.8rem;
-            
-            /* 제목 한 줄 말줄임 */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -53,8 +51,6 @@
             font-size: 0.95rem;
             line-height: 1.5;
             min-height: 3rem;
-            
-            /* 내용 두 줄 말줄임 */
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -84,21 +80,41 @@
     <jsp:include page="../layout/header.jsp" />
 
     <div class="container pb-5" style="margin-top: 50px;">
+        
         <div class="d-flex justify-content-between align-items-end mb-4 px-2">
             <div>
                 <h2 class="fw-bold m-0"><i class="fa-solid fa-layer-group text-primary"></i> 최신 글 목록</h2>
                 <small class="text-muted">개발 지식과 경험을 공유하는 공간입니다.</small>
             </div>
-            <a href="${pageContext.request.contextPath}/board/register" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold">
-                <i class="fa-solid fa-pen me-1"></i> 글쓰기
-            </a>
+            
+            <div class="d-flex gap-2">
+                <form id="searchForm" action="/board/list" method="get" class="d-flex">
+                    <select name="type" class="form-select me-2" style="width: 100px;">
+                        <option value="" ${empty pageContext.request.getParameter('type') ? 'selected' : ''}>--</option>
+                        <option value="T" ${pageContext.request.getParameter('type') == 'T' ? 'selected' : ''}>제목</option>
+                        <option value="C" ${pageContext.request.getParameter('type') == 'C' ? 'selected' : ''}>내용</option>
+                        <option value="W" ${pageContext.request.getParameter('type') == 'W' ? 'selected' : ''}>작성자</option>
+                        <option value="TC" ${pageContext.request.getParameter('type') == 'TC' ? 'selected' : ''}>제목+내용</option>
+                    </select>
+                    
+                    <input type="text" name="keyword" class="form-control me-2" placeholder="검색어 입력" value="${pageContext.request.getParameter('keyword')}">
+                    
+                    <button class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </form>
+
+                <a href="${pageContext.request.contextPath}/board/register" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center">
+                    <i class="fa-solid fa-pen me-1"></i> 글쓰기
+                </a>
+            </div>
         </div>
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             
             <c:forEach items="${list}" var="board">
                 <div class="col">
-                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}'">
+                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}&type=${pageContext.request.getParameter('type')}&keyword=${pageContext.request.getParameter('keyword')}'">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="writer-badge">
@@ -110,7 +126,6 @@
                             </div>
                             
                             <h5 class="card-title">${board.title}</h5>
-                            
                             <p class="card-text">${board.content}</p>
                         </div>
                         
@@ -133,13 +148,40 @@
         <c:if test="${empty list}">
             <div class="text-center py-5 my-5 bg-white rounded shadow-sm">
                 <i class="fa-regular fa-folder-open fa-3x text-secondary mb-3"></i>
-                <h5 class="text-muted">등록된 게시글이 없습니다.</h5>
-                <p class="text-muted small">첫 번째 게시글의 주인공이 되어보세요!</p>
+                <h5 class="text-muted">등록된 게시글이 없거나 검색 결과가 없습니다.</h5>
+                <p class="text-muted small">새로운 게시글을 등록해보세요!</p>
             </div>
         </c:if>
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script type="text/javascript">
+    $(document).ready(function(){
+        
+        var searchForm = $("#searchForm");
+
+        $("#searchForm button").on("click", function(e){
+            
+            // 검색 조건 선택 안 했을 때 경고
+            if(!searchForm.find("option:selected").val()){
+                alert("검색 종류를 선택하세요");
+                return false;
+            }
+
+            // 검색어 입력 안 했을 때 경고
+            if(!searchForm.find("input[name='keyword']").val()){
+                alert("키워드를 입력하세요");
+                return false;
+            }
+
+            // 유효성 검사 통과 시 전송
+            e.preventDefault();
+            searchForm.submit();
+        });
+
+    });
+    </script>
 </body>
 </html>

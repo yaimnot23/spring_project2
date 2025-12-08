@@ -2,13 +2,13 @@ package com.koreait.www.repository;
 
 import java.util.List;
 import com.koreait.www.domain.BoardVO;
+import com.koreait.www.domain.Criteria;
 
 public interface BoardMapper {
 
-	// 1. 게시글 목록 조회
-	List<BoardVO> getList();
+	List<BoardVO> getList(Criteria cri);
 	
-	// 2. 게시글 등록 (등록된 글 번호를 알 필요가 있을 때 사용)
+	// 2. 게시글 등록
 	void insertSelectKey(BoardVO board);
 	
 	// 3. 게시글 상세 조회

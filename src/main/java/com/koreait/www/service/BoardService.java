@@ -1,7 +1,9 @@
 package com.koreait.www.service;
 
 import java.util.List;
+
 import com.koreait.www.domain.BoardVO;
+import com.koreait.www.domain.Criteria;
 
 public interface BoardService {
 	
@@ -18,5 +20,5 @@ public interface BoardService {
 	boolean remove(Long bno);
 	
 	// 전체 목록 조회
-	List<BoardVO> getList();
+	List<BoardVO> getList(Criteria cri);
 }

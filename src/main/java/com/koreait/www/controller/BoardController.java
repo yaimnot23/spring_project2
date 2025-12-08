@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.koreait.www.domain.BoardVO;
+import com.koreait.www.domain.Criteria;
 import com.koreait.www.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,10 @@ public class BoardController {
 	// 1. 목록 조회 (GET)
 	// URL: /board/list
 	@GetMapping("/list")
-	public void list(Model model) {
-		log.info("list 요청");
-		// 서비스를 통해 게시글 목록을 가져와서 "list"라는 이름으로 화면(JSP)에 전달
-		model.addAttribute("list", service.getList());
-	}
+    public void list(Criteria cri, Model model) {
+        log.info("list 요청: " + cri);
+        model.addAttribute("list", service.getList(cri));
+    }
 	
 	// 2. 글쓰기 페이지 이동 (GET)
 	// URL: /board/register

@@ -37,21 +37,7 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/"><i class="fa-solid fa-code text-primary"></i> My DevLog</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/board/list">게시판</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">로그인</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <jsp:include page="layout/header.jsp" />
 
     <section class="hero-section text-center">
         <div class="container">
@@ -65,8 +51,8 @@
                     <i class="fa-solid fa-list"></i> 게시글 보러가기
                 </a>
                 <a href="https://github.com/yaimnot23/spring_project2.git" target="_blank" class="btn btn-outline-dark btn-lg px-5 rounded-pill">
-    				<i class="fa-brands fa-github"></i> GitHub
-				</a>
+                    <i class="fa-brands fa-github"></i> GitHub
+                </a>
             </div>
             
             <div class="mt-5 p-3 d-inline-block bg-light rounded text-muted small border">
