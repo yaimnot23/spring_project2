@@ -64,9 +64,9 @@
                 <a href="${pageContext.request.contextPath}/board/list" class="btn btn-custom-primary btn-lg px-5 rounded-pill fw-bold">
                     <i class="fa-solid fa-list"></i> 게시글 보러가기
                 </a>
-                <a href="#" class="btn btn-outline-dark btn-lg px-5 rounded-pill">
-                    <i class="fa-brands fa-github"></i> GitHub
-                </a>
+                <a href="https://github.com/yaimnot23/spring_project2.git" target="_blank" class="btn btn-outline-dark btn-lg px-5 rounded-pill">
+    				<i class="fa-brands fa-github"></i> GitHub
+				</a>
             </div>
             
             <div class="mt-5 p-3 d-inline-block bg-light rounded text-muted small border">

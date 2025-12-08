@@ -23,3 +23,16 @@ CREATE TABLE IF NOT EXISTS board (
     reg_date DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '작성일',
     PRIMARY KEY (bno)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+
+-- 회원 테이블 생성
+CREATE TABLE IF NOT EXISTS member (
+    id VARCHAR(50) NOT NULL COMMENT '아이디',
+    pw VARCHAR(100) NOT NULL COMMENT '비밀번호',
+    name VARCHAR(50) NOT NULL COMMENT '이름',
+    reg_date DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '가입일',
+    PRIMARY KEY (id)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- 테스트용 계정 추가 (아이디: admin / 비번: 1234)
+INSERT INTO member (id, pw, name) VALUES ('admin', '1234', '관리자');

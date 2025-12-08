@@ -5,26 +5,50 @@
   <div class="container-fluid">
     <a class="navbar-brand" href="${pageContext.request.contextPath}/">Spring Project</a>
     
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
       <span class="navbar-toggler-icon"></span>
     </button>
     
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="${pageContext.request.contextPath}/">Home</a>
+          <a class="nav-link active" href="${pageContext.request.contextPath}/">Home</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="${pageContext.request.contextPath}/board/list">게시판</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">회원관리 (준비중)</a>
-        </li>
       </ul>
-      <form class="d-flex">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-     </form>
+      
+      <ul class="navbar-nav ms-auto">
+        <c:choose>
+            <%-- 세션에 'member'가 비어있으면 (비로그인) --%>
+            <c:when test="${empty sessionScope.member}">
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/member/login">
+                        <i class="fa-solid fa-right-to-bracket"></i> 로그인
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">회원가입</a>
+                </li>
+            </c:when>
+            
+            <%-- 세션에 'member'가 있으면 (로그인 성공) --%>
+            <c:otherwise>
+                <li class="nav-item me-3">
+                    <span class="nav-link text-white">
+                        <i class="fa-solid fa-user"></i> <strong>${sessionScope.member.name}</strong>님
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/member/logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+                    </a>
+                </li>
+            </c:otherwise>
+        </c:choose>
+      </ul>
+      
     </div>
   </div>
 </nav>
