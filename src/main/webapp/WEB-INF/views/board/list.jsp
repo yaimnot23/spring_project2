@@ -73,6 +73,23 @@
             font-size: 0.85rem;
             color: #aaa;
         }
+        /* 페이징 스타일 커스텀 */
+        .page-link {
+            color: #333;
+            border: none;
+            margin: 0 3px;
+            border-radius: 5px !important;
+        }
+        .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .page-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
     </style>
 </head>
 <body>
@@ -89,15 +106,18 @@
             
             <div class="d-flex gap-2">
                 <form id="searchForm" action="/board/list" method="get" class="d-flex">
+                    <input type="hidden" name="pageNum" value="${pageMaker.cri.pageNum}">
+                    <input type="hidden" name="amount" value="${pageMaker.cri.amount}">
+                    
                     <select name="type" class="form-select me-2" style="width: 100px;">
-                        <option value="" ${empty pageContext.request.getParameter('type') ? 'selected' : ''}>--</option>
-                        <option value="T" ${pageContext.request.getParameter('type') == 'T' ? 'selected' : ''}>제목</option>
-                        <option value="C" ${pageContext.request.getParameter('type') == 'C' ? 'selected' : ''}>내용</option>
-                        <option value="W" ${pageContext.request.getParameter('type') == 'W' ? 'selected' : ''}>작성자</option>
-                        <option value="TC" ${pageContext.request.getParameter('type') == 'TC' ? 'selected' : ''}>제목+내용</option>
+                        <option value="" ${empty pageMaker.cri.type ? 'selected' : ''}>--</option>
+                        <option value="T" ${pageMaker.cri.type == 'T' ? 'selected' : ''}>제목</option>
+                        <option value="C" ${pageMaker.cri.type == 'C' ? 'selected' : ''}>내용</option>
+                        <option value="W" ${pageMaker.cri.type == 'W' ? 'selected' : ''}>작성자</option>
+                        <option value="TC" ${pageMaker.cri.type == 'TC' ? 'selected' : ''}>제목+내용</option>
                     </select>
                     
-                    <input type="text" name="keyword" class="form-control me-2" placeholder="검색어 입력" value="${pageContext.request.getParameter('keyword')}">
+                    <input type="text" name="keyword" class="form-control me-2" placeholder="검색어 입력" value="${pageMaker.cri.keyword}">
                     
                     <button class="btn btn-outline-secondary">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -114,7 +134,7 @@
             
             <c:forEach items="${list}" var="board">
                 <div class="col">
-                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}&type=${pageContext.request.getParameter('type')}&keyword=${pageContext.request.getParameter('keyword')}'">
+                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}&pageNum=${pageMaker.cri.pageNum}&amount=${pageMaker.cri.amount}&type=${pageMaker.cri.type}&keyword=${pageMaker.cri.keyword}'">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="writer-badge">
@@ -153,6 +173,33 @@
             </div>
         </c:if>
 
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center">
+                
+                <c:if test="${pageMaker.prev}">
+                    <li class="page-item">
+                        <a class="page-link" href="${pageMaker.startPage - 1}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                </c:if>
+
+                <c:forEach var="num" begin="${pageMaker.startPage}" end="${pageMaker.endPage}">
+                    <li class="page-item ${pageMaker.cri.pageNum == num ? 'active' : ''}">
+                        <a class="page-link" href="${num}">${num}</a>
+                    </li>
+                </c:forEach>
+
+                <c:if test="${pageMaker.next}">
+                    <li class="page-item">
+                        <a class="page-link" href="${pageMaker.endPage + 1}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </c:if>
+            </ul>
+        </nav>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -162,21 +209,32 @@
         
         var searchForm = $("#searchForm");
 
+        // 1. 페이지 번호 클릭 이벤트
+        $(".page-link").on("click", function(e){
+            e.preventDefault(); // a 태그의 기본 이동 동작을 막음
+            var targetPage = $(this).attr("href"); // 클릭한 번호 가져오기
+            
+            // 폼 안에 있는 pageNum 값을 클릭한 번호로 변경
+            searchForm.find("input[name='pageNum']").val(targetPage);
+            // 폼 제출 (기존 검색 조건도 같이 전송됨)
+            searchForm.submit();
+        });
+
+        // 2. 검색 버튼 클릭 이벤트
         $("#searchForm button").on("click", function(e){
             
-            // 검색 조건 선택 안 했을 때 경고
             if(!searchForm.find("option:selected").val()){
                 alert("검색 종류를 선택하세요");
                 return false;
             }
 
-            // 검색어 입력 안 했을 때 경고
             if(!searchForm.find("input[name='keyword']").val()){
                 alert("키워드를 입력하세요");
                 return false;
             }
 
-            // 유효성 검사 통과 시 전송
+            // 검색을 새로 하면 무조건 1페이지로 이동해야 함
+            searchForm.find("input[name='pageNum']").val("1");
             e.preventDefault();
             searchForm.submit();
         });

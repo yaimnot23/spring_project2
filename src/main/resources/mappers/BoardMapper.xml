@@ -25,12 +25,12 @@
         </if>
     </sql>
 
-    <select id="getList" resultType="BoardVO">
+ <!--    <select id="getList" resultType="BoardVO">
         SELECT * FROM board 
         WHERE bno > 0 
         <include refid="criteria"></include> 
         ORDER BY bno DESC
-    </select>
+    </select> -->
 
     <insert id="insertSelectKey">
         <selectKey keyProperty="bno" order="AFTER" resultType="long">
