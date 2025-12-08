@@ -11,7 +11,7 @@ public interface BoardService {
 	void register(BoardVO board);
 	
 	// 글 상세 조회
-	BoardVO get(Long bno);
+	BoardVO get(Long bno, String readerId);
 	
 	// 글 수정
 	boolean modify(BoardVO board);
@@ -21,4 +21,6 @@ public interface BoardService {
 	
 	// 전체 목록 조회
 	List<BoardVO> getList(Criteria cri);
+	
+	int getTotal(Criteria cri);
 }

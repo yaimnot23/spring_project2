@@ -1,5 +1,7 @@
 package com.koreait.www.controller;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.koreait.www.domain.BoardVO;
 import com.koreait.www.domain.Criteria;
+import com.koreait.www.domain.MemberVO;
 import com.koreait.www.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,7 +32,16 @@ public class BoardController {
 	@GetMapping("/list")
     public void list(Criteria cri, Model model) {
         log.info("list 요청: " + cri);
+        
+        // 1. 페이징 처리된 목록 가져오기
         model.addAttribute("list", service.getList(cri));
+        
+        // 2. 전체 글 개수 가져오기
+        int total = service.getTotal(cri);
+        log.info("total count: " + total);
+        
+        // 3. 화면에 페이징 정보 전달 (pageMaker)
+        model.addAttribute("pageMaker", new PageDTO(cri, total));
     }
 	
 	// 2. 글쓰기 페이지 이동 (GET)
@@ -60,11 +72,21 @@ public class BoardController {
 	// URL: /board/get?bno=1 또는 /board/modify?bno=1
 	// @GetMapping에 배열로 경로를 2개 넣어서 메서드 하나로 처리
 	@GetMapping({"/get", "/modify"})
-	public void get(@RequestParam("bno") Long bno, Model model) {
-		log.info("/get or /modify 요청... 번호: " + bno);
-		// 번호(bno)에 해당하는 글을 읽어와서 "board"라는 이름으로 화면에 전달
-		model.addAttribute("board", service.get(bno));
-	}
+    public void get(@RequestParam("bno") Long bno, Model model, HttpSession session) {
+        log.info("/get or /modify 요청... 번호: " + bno);
+        
+        // 세션에서 로그인한 사용자 정보 가져오기
+        MemberVO member = (MemberVO) session.getAttribute("member");
+        String readerId = null;
+        
+        // 로그인을 했다면 ID를 꺼냄
+        if(member != null) {
+            readerId = member.getId();
+        }
+        
+        // 서비스에 bno와 readerId를 같이 넘김 (조회수 로직 처리용)
+        model.addAttribute("board", service.get(bno, readerId));
+    }
 	
 	// 5. 글 수정 처리 (POST)
 	// URL: /board/modify
@@ -93,5 +115,7 @@ public class BoardController {
 		
 		return "redirect:/board/list";
 	}
+	
+	
 
 }

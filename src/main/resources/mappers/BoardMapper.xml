@@ -56,5 +56,31 @@
         reg_date = now()
         WHERE bno = #{bno}
     </update>
+    
+    <update id="updateReadCount">
+        UPDATE board SET read_count = read_count + 1 WHERE bno = #{bno}
+    </update>
+
+    <insert id="insertReadLog">
+        INSERT IGNORE INTO board_read_log (bno, reader_id)
+        VALUES (#{bno}, #{readerId})
+    </insert>
+    
+    <select id="checkReadLog" resultType="int">
+        SELECT count(*) FROM board_read_log WHERE bno = #{bno} AND reader_id = #{readerId}
+    </select>
+    
+    <select id="getList" resultType="BoardVO">
+        SELECT * FROM board 
+        WHERE bno > 0 
+        <include refid="criteria"></include> 
+        ORDER BY bno DESC
+        LIMIT #{skip}, #{amount}
+    </select>
+
+    <select id="getTotalCount" resultType="int">
+        SELECT count(*) FROM board WHERE bno > 0 
+        <include refid="criteria"></include>
+    </select>
 
 </mapper>

@@ -22,8 +22,23 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public BoardVO get(Long bno) {
-        log.info("get" + bno);
+    public BoardVO get(Long bno, String readerId) {
+        log.info("get....." + bno + " reader: " + readerId);
+        
+        // readerId가 있을 때만 (로그인 했을 때만) 조회수 로직 수행
+        if (readerId != null && !readerId.isEmpty()) {
+            // 1. 이 사람이 이 글을 본 적이 있는지 확인
+            int count = mapper.checkReadLog(bno, readerId);
+            
+            // 2. 본 적이 없다면 (count == 0)
+            if (count == 0) {
+                // 기록을 남기고
+                mapper.insertReadLog(bno, readerId);
+                // 조회수를 올린다
+                mapper.updateReadCount(bno);
+            }
+        }
+        
         return mapper.read(bno);
     }
 
@@ -45,5 +60,11 @@ public class BoardServiceImpl implements BoardService {
         log.info("getList with criteria: " + cri);
         return mapper.getList(cri);
     }
+    
+    @Override
+    public int getTotal(Criteria cri) {
+        return mapper.getTotalCount(cri);
+    }
+    
 
 }

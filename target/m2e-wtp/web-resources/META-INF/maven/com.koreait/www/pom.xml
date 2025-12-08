@@ -121,6 +121,8 @@
 			<scope>test</scope>
 		</dependency>
 		
+		
+		
 		<!--  추가되는 라이브러리들  -->
 <!--  https://mvnrepository.com/artifact/org.projectlombok/lombok  -->
 <dependency>
@@ -154,6 +156,20 @@
 <artifactId>mybatis-spring</artifactId>
 <version>2.0.6</version>
 </dependency>        
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+
+
 	</dependencies>
     <build>
         <plugins>

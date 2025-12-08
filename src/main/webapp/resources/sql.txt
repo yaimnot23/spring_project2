@@ -36,3 +36,48 @@ CREATE TABLE IF NOT EXISTS member (
 
 -- 테스트용 계정 추가 (아이디: admin / 비번: 1234)
 INSERT INTO member (id, pw, name) VALUES ('admin', '1234', '관리자');
+
+CREATE TABLE IF NOT EXISTS reply (
+    rno INT AUTO_INCREMENT PRIMARY KEY,
+    bno INT NOT NULL,
+    reply VARCHAR(1000) NOT NULL,
+    replyer VARCHAR(50) NOT NULL,
+    replyDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updateDate DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (bno) REFERENCES board(bno) ON DELETE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+-- 조회수 중복 방지 로그 테이블
+CREATE TABLE IF NOT EXISTS board_read_log (
+    log_no INT AUTO_INCREMENT PRIMARY KEY,
+    bno INT NOT NULL,
+    reader_id VARCHAR(50) NOT NULL,
+    read_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (bno) REFERENCES board(bno) ON DELETE CASCADE,
+    UNIQUE KEY unique_read (bno, reader_id)  -- 중요: (글번호, 아이디) 조합은 유일해야 함
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+DELIMITER $$
+CREATE PROCEDURE insertLoop()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    WHILE i <= 100 DO
+        INSERT INTO board(title, content, writer)
+        VALUES (concat('테스트 제목 ', i), concat('테스트 내용 ', i), concat('user', i % 10));
+        SET i = i + 1;
+    END WHILE;
+END$$
+DELIMITER ;
+
+CALL insertLoop();
+DROP PROCEDURE insertLoop;
+
+
+
+
+
+
+
+
+
+
