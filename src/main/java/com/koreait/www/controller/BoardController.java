@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.koreait.www.domain.BoardVO;
 import com.koreait.www.domain.Criteria;
 import com.koreait.www.domain.MemberVO;
+import com.koreait.www.domain.PageDTO;
 import com.koreait.www.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
