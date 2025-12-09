@@ -95,9 +95,7 @@ $(document).ready(function(){
         operForm.submit();
     });
     
-    // ==========================================
     // 2. 댓글(Reply) 관련 기능 (Ajax)
-    // ==========================================
     
     var bnoValue = '<c:out value="${board.bno}"/>';
     var replyUL = $("#replyList");
