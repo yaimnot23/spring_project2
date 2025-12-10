@@ -13,8 +13,16 @@
     SELECT * FROM tbl_file WHERE bno = #{bno}
   </select>
 
+  <select id="findByUuid" resultType="com.koreait.www.domain.FileVO">
+    SELECT * FROM tbl_file WHERE uuid = #{uuid}
+  </select>
+
   <delete id="deleteAll">
     DELETE FROM tbl_file WHERE bno = #{bno}
+  </delete>
+
+  <delete id="delete">
+    DELETE FROM tbl_file WHERE uuid = #{uuid}
   </delete>
 
 </mapper>

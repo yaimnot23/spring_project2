@@ -13,8 +13,9 @@ public interface BoardService {
 	// 글 상세 조회
 	BoardVO get(Long bno, String readerId);
 	
-	// 글 수정
-	boolean modify(BoardVO board);
+	// 글 수정 (삭제할 파일 목록도 받도록 변경)
+	// 기존: boolean modify(BoardVO board);
+	boolean modify(BoardVO board, List<String> removeFiles);
 	
 	// 글 삭제
 	boolean remove(Long bno);
