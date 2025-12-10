@@ -27,7 +27,7 @@ public class BoardServiceImpl implements BoardService {
     public void register(BoardVO board) {
         log.info("register......" + board);
         
-        // 1. 게시글 DB 등록 (여기서 bno가 생성됨)
+        // 1. 게시글 DB 등록
         mapper.insertSelectKey(board);
         
         // 2. 첨부파일이 없으면 여기서 종료
