@@ -1,6 +1,7 @@
 package com.koreait.www.config;
 
 import javax.servlet.Filter;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletRegistration.Dynamic;
 
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -39,12 +40,16 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 		return new Filter[] {encoding};
 	}
 	
-	// 기타 사용자 설정 => customerRegistration
-	@Override
-	protected void customizeRegistration(Dynamic registration) {
-		// 파일업로드 경로 설정, 익셉션 처리 설정
-		
-	}
+	// [파일 업로드 설정]
+    @Override
+    protected void customizeRegistration(Dynamic registration) {
+        // 임시 저장 경로, 최대 파일 크기, 요청 최대 크기, 파일 임계값
+        // D드라이브의 temp 폴더를 사용하도록 설정
+        MultipartConfigElement multipartConfig = 
+            new MultipartConfigElement("D:\\.Spotlight-V100\\some_nec_downloads\\spring\\temp", 
+                                       20971520, 41943040, 20971520);
+        registration.setMultipartConfig(multipartConfig);
+    }
 	
 	
 	

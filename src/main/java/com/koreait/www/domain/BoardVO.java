@@ -1,6 +1,7 @@
 package com.koreait.www.domain;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.Data;
 
@@ -14,5 +15,6 @@ public class BoardVO {
 	private int readCount;     // 조회수 (DB: read_count)
 	private String isDel;      // 삭제 여부 (DB: is_del)
 	private Date regDate;      // 작성일 (DB: reg_date)
+	private List<FileVO> attachList;
 
 }

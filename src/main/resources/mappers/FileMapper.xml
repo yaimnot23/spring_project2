@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.koreait.www.repository.FileMapper">
+
+  <insert id="insert">
+    INSERT INTO tbl_file (uuid, upload_path, file_name, file_type, bno, file_size)
+    VALUES (#{uuid}, #{uploadPath}, #{fileName}, #{fileType}, #{bno}, #{fileSize})
+  </insert>
+
+  <select id="findByBno" resultType="com.koreait.www.domain.FileVO">
+    SELECT * FROM tbl_file WHERE bno = #{bno}
+  </select>
+
+  <delete id="deleteAll">
+    DELETE FROM tbl_file WHERE bno = #{bno}
+  </delete>
+
+</mapper>

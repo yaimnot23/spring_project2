@@ -72,6 +72,35 @@ DELIMITER ;
 CALL insertLoop();
 DROP PROCEDURE insertLoop;
 
+-- 파일 테이블 생성
+CREATE TABLE file (
+    uuid VARCHAR(100) PRIMARY KEY,       -- 고유 식별자
+    upload_path VARCHAR(200) NOT NULL,   -- 저장 경로
+    file_name VARCHAR(100) NOT NULL,     -- 원본 파일명
+    file_type BOOLEAN DEFAULT 0,         -- 이미지 여부
+    bno INT,                             -- [수정됨] board 테이블과 동일하게 INT로 변경
+    file_size BIGINT,                    -- 파일 크기
+    reg_date DATETIME DEFAULT NOW(),     -- 등록일
+    CONSTRAINT fk_file_board FOREIGN KEY (bno) 
+    REFERENCES board (bno) ON DELETE CASCADE
+);
+
+-- 기존에 file 테이블을 만들다가 실패한 찌꺼기가 있다면 삭제
+DROP TABLE IF EXISTS file;
+DROP TABLE IF EXISTS tbl_file;
+
+-- 테이블 생성 (이름: tbl_file)
+CREATE TABLE tbl_file (
+    uuid VARCHAR(100) PRIMARY KEY,       -- 파일 고유 ID
+    upload_path VARCHAR(200) NOT NULL,   -- 저장 폴더명 (image, video, others)
+    file_name VARCHAR(100) NOT NULL,     -- 원본 파일명
+    file_type BOOLEAN DEFAULT 0,         -- 이미지 여부 (1:이미지, 0:그외)
+    bno INT,                             -- 게시글 번호 (board 테이블 bno와 타입 일치: INT)
+    file_size BIGINT,                    -- 파일 크기
+    reg_date DATETIME DEFAULT NOW(),     -- 등록일
+    CONSTRAINT fk_file_board FOREIGN KEY (bno) 
+    REFERENCES board (bno) ON DELETE CASCADE
+);
 
 
 
