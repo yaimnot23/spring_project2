@@ -22,8 +22,8 @@ public class BoardServiceImpl implements BoardService {
 
     private final BoardMapper mapper;
     private final FileMapper fileMapper;
-    
-    // [설정] 파일 저장 경로 (Controller와 동일하게 맞춰주세요)
+
+    // [설정] 실제 파일 저장 경로 (사용자 환경에 맞춤)
     private final String UPLOAD_ROOT = "D:\\.Spotlight-V100\\some_nec_downloads\\spring\\spring2_saveuploadfiles";
 
     @Transactional
@@ -42,28 +42,48 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    @Transactional
     @Override
     public BoardVO get(Long bno, String readerId) {
-        log.info("get....." + bno);
+        log.info("get....." + bno + ", readerId: " + readerId);
+        
+        // 1. 게시글 가져오기
         BoardVO board = mapper.read(bno);
+        
+        // 2. 첨부파일 가져오기
         List<FileVO> fileList = fileMapper.findByBno(bno);
         board.setAttachList(fileList);
+        
+        // 3. 조회수 증가 로직 (readerId가 있을 때만 동작)
+        if (readerId != null && !readerId.isEmpty()) {
+            // 본인 글 조회 시 조회수 증가를 막으려면 아래 주석 해제
+            // if (!readerId.equals(board.getWriter())) {
+                
+                int logCount = mapper.checkReadLog(bno, readerId);
+                
+                // 읽은 기록이 없으면(0) -> 기록 남기고 조회수 +1
+                if (logCount == 0) {
+                    mapper.insertReadLog(bno, readerId);
+                    mapper.updateReadCount(bno);
+                }
+            // }
+        }
+        
         return board;
     }
 
-    @Transactional // [수정] 파일 삭제 및 등록 처리를 위한 트랜잭션
+    @Transactional
     @Override
     public boolean modify(BoardVO board, List<String> removeFiles) {
         log.info("modify......" + board);
         
-        // 1. 사용자가 삭제 요청한 파일들 처리
+        // 1. 파일 삭제 처리 (화면에서 X 누른 파일들)
         if (removeFiles != null && !removeFiles.isEmpty()) {
             for (String uuid : removeFiles) {
-                // 실제 파일 삭제를 위해 정보 조회
                 FileVO vo = fileMapper.findByUuid(uuid);
                 if (vo != null) {
-                    deleteFileFromDisk(vo); // HDD에서 삭제
-                    fileMapper.delete(uuid); // DB에서 삭제
+                    deleteFileFromDisk(vo);   // HDD에서 삭제
+                    fileMapper.delete(uuid);  // DB에서 삭제
                 }
             }
         }
@@ -71,7 +91,7 @@ public class BoardServiceImpl implements BoardService {
         // 2. 게시글 내용 수정
         boolean modifyResult = mapper.update(board) == 1;
         
-        // 3. 새로 업로드된 파일 등록
+        // 3. 새로 추가된 파일 등록
         if (modifyResult && board.getAttachList() != null && !board.getAttachList().isEmpty()) {
             for (FileVO attach : board.getAttachList()) {
                 attach.setBno(board.getBno());
@@ -80,28 +100,6 @@ public class BoardServiceImpl implements BoardService {
         }
         
         return modifyResult;
-    }
-    
-    // [헬퍼 메서드] 하드디스크의 실제 파일 삭제
-    private void deleteFileFromDisk(FileVO vo) {
-        try {
-            String path = UPLOAD_ROOT + File.separator + vo.getUploadPath() + File.separator + vo.getUuid() + "_" + vo.getFileName();
-            File file = new File(path);
-            
-            if (file.exists()) {
-                file.delete();
-            }
-            
-            if (vo.isFileType()) { // 이미지라면 썸네일도 삭제
-                String thumbPath = UPLOAD_ROOT + File.separator + vo.getUploadPath() + File.separator + "s_" + vo.getUuid() + "_" + vo.getFileName();
-                File thumb = new File(thumbPath);
-                if (thumb.exists()) {
-                    thumb.delete();
-                }
-            }
-        } catch (Exception e) {
-            log.error("파일 삭제 중 오류: " + e.getMessage());
-        }
     }
 
     @Override
@@ -119,5 +117,27 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public int getTotal(Criteria cri) {
         return mapper.getTotalCount(cri);
+    }
+
+    // [헬퍼 메서드] 실제 파일 삭제
+    private void deleteFileFromDisk(FileVO vo) {
+        try {
+            String path = UPLOAD_ROOT + File.separator + vo.getUploadPath() + File.separator + vo.getUuid() + "_" + vo.getFileName();
+            File file = new File(path);
+            
+            if (file.exists()) {
+                file.delete();
+            }
+            
+            if (vo.isFileType()) { // 이미지면 썸네일도 삭제
+                String thumbPath = UPLOAD_ROOT + File.separator + vo.getUploadPath() + File.separator + "s_" + vo.getUuid() + "_" + vo.getFileName();
+                File thumb = new File(thumbPath);
+                if (thumb.exists()) {
+                    thumb.delete();
+                }
+            }
+        } catch (Exception e) {
+            log.error("파일 삭제 중 오류: " + e.getMessage());
+        }
     }
 }
