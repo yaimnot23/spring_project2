@@ -26,20 +26,26 @@
     <div class="card">
         <div class="card-header">Board Register</div>
         <div class="card-body">
-            <form role="form" action="/board/register" method="post">
+            <form role="form" action="/board/register" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label">제목</label>
-                    <input class="form-control" name="title" placeholder="제목을 입력하세요">
+                    <input class="form-control" name="title" placeholder="제목을 입력하세요" required>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label">내용</label>
-                    <textarea class="form-control" rows="5" name="content" placeholder="내용을 입력하세요"></textarea>
+                    <textarea class="form-control" rows="5" name="content" placeholder="내용을 입력하세요" required></textarea>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label">작성자</label>
-                    <input class="form-control" name="writer" placeholder="작성자를 입력하세요">
+                    <input class="form-control" name="writer" value="${member.id}" placeholder="작성자를 입력하세요" readonly>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">첨부파일</label>
+                    <input type="file" class="form-control" name="uploadFiles" multiple>
+                    <div class="form-text">이미지나 문서를 여러 개 첨부할 수 있습니다.</div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">등록</button>

@@ -16,6 +16,12 @@
 
 <style>
     .container { margin-top: 30px; }
+    /* 첨부파일 영역 스타일 */
+    .uploadResult { margin-top: 20px; background-color: #f8f9fa; border-radius: 5px; padding: 15px; }
+    .uploadResult ul { display: flex; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; }
+    .uploadResult li { margin: 10px; text-align: center; }
+    .uploadResult li img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; cursor: pointer; }
+    .uploadResult li span { display: block; margin-top: 5px; font-size: 12px; color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
 </style>
 </head>
 <body>
@@ -47,9 +53,42 @@
                 <label class="form-label">작성자</label>
                 <input class="form-control" name="writer" value="${board.writer}" readonly>
             </div>
-            
-            <button data-oper='modify' class="btn btn-primary">수정</button>
-            <button data-oper='list' class="btn btn-secondary">목록</button>
+
+            <c:if test="${not empty board.attachList}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">첨부파일</label>
+                    <div class="uploadResult border p-3">
+                        <ul>
+                            <c:forEach items="${board.attachList}" var="file">
+                                <c:set var="fileCallPath" value="/upload/${file.uploadPath}/${file.uuid}_${file.fileName}" />
+                                <c:set var="thumbCallPath" value="/upload/${file.uploadPath}/s_${file.uuid}_${file.fileName}" />
+                                
+                                <li>
+                                    <c:if test="${file.fileType}">
+                                        <a href="${fileCallPath}" target="_blank">
+                                            <img src="${thumbCallPath}" alt="${file.fileName}">
+                                        </a>
+                                    </c:if>
+                                    
+                                    <c:if test="${!file.fileType}">
+                                        <a href="${fileCallPath}" target="_blank">
+                                            <div style="width: 100px; height: 100px; background: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 5px;">
+                                                <i class="fa-regular fa-file-lines fa-2x text-secondary"></i>
+                                            </div>
+                                        </a>
+                                    </c:if>
+                                    
+                                    <span>${file.fileName}</span>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </div>
+                </div>
+            </c:if>
+            <div class="mt-4">
+                <button data-oper='modify' class="btn btn-primary">수정</button>
+                <button data-oper='list' class="btn btn-secondary">목록</button>
+            </div>
             
             <form id="operForm" action="/board/modify" method="get">
                 <input type="hidden" id="bno" name="bno" value="${board.bno}">
@@ -67,7 +106,7 @@
             </div>
 
             <ul class="list-group" id="replyList">
-                </ul>
+            </ul>
             
         </div>
     </div>
@@ -84,26 +123,21 @@ $(document).ready(function(){
     var operForm = $("#operForm");
 
     $("button[data-oper='modify']").on("click", function(e){
-        // 수정 버튼 클릭 시 폼 전송
         operForm.attr("action", "/board/modify").submit();
     });
 
     $("button[data-oper='list']").on("click", function(e){
-        // 목록 버튼 클릭 시 bno 태그를 제거하고 목록으로 이동
         operForm.find("#bno").remove();
         operForm.attr("action", "/board/list");
         operForm.submit();
     });
     
     // 2. 댓글(Reply) 관련 기능 (Ajax)
-    
     var bnoValue = '<c:out value="${board.bno}"/>';
     var replyUL = $("#replyList");
 
-    // 페이지 로드 시 댓글 목록 가져오기
     showList();
 
-    // [함수] 댓글 목록 출력
     function showList() {
         $.getJSON("/replies/pages/" + bnoValue, function(data) {
             var str = "";
@@ -116,11 +150,9 @@ $(document).ready(function(){
             for (var i = 0, len = data.length || 0; i < len; i++) {
                 str += '<li class="list-group-item d-flex justify-content-between align-items-center">';
                 str += '  <div>';
-                // 작성자와 작성시간 표시 (displayTime 함수 사용)
                 str += '    <div class="fw-bold mb-1">' + data[i].replyer + ' <small class="text-muted fw-normal ms-2">' + displayTime(data[i].replyDate) + '</small></div>';
                 str += '    <span>' + data[i].reply + '</span>';
                 str += '  </div>';
-                // 삭제 버튼 (data-rno 속성에 댓글 번호 저장)
                 str += '  <button class="btn btn-sm btn-outline-danger removeBtn" data-rno="' + data[i].rno + '">삭제</button>';
                 str += '</li>';
             }
@@ -128,14 +160,13 @@ $(document).ready(function(){
         });
     }
     
-    // [함수] 날짜 포맷팅 (오늘이면 시간, 아니면 날짜)
     function displayTime(timeValue) {
         var today = new Date();
         var gap = today.getTime() - timeValue;
         var dateObj = new Date(timeValue);
         var str = "";
 
-        if (gap < (1000 * 60 * 60 * 24)) { // 24시간 이내
+        if (gap < (1000 * 60 * 60 * 24)) { 
             var hh = dateObj.getHours();
             var mi = dateObj.getMinutes();
             var ss = dateObj.getSeconds();
@@ -148,7 +179,6 @@ $(document).ready(function(){
         }
     }
 
-    // [이벤트] 댓글 등록 버튼 클릭
     $("#addReplyBtn").on("click", function(e){
         var reply = {
             reply: $("#reply").val(),
@@ -167,8 +197,8 @@ $(document).ready(function(){
             success: function(result, status, xhr) {
                 if (result === "success") {
                     alert("댓글이 등록되었습니다.");
-                    $("#reply").val(""); // 입력창 비우기
-                    showList(); // 목록 갱신
+                    $("#reply").val(""); 
+                    showList(); 
                 }
             },
             error: function(xhr, status, er) {
@@ -177,10 +207,8 @@ $(document).ready(function(){
         });
     });
 
-    // [이벤트] 댓글 삭제 버튼 클릭 (이벤트 위임)
     replyUL.on("click", ".removeBtn", function(e){
         var rno = $(this).data("rno");
-        
         if(!confirm("삭제하시겠습니까?")) return;
 
         $.ajax({

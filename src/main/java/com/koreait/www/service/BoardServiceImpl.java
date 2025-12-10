@@ -45,8 +45,20 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardVO get(Long bno, String readerId) {
         log.info("get....." + bno);
-        // 조회수 처리 로직 등이 있다면 여기에 포함 (기존 코드 유지)
-        return mapper.read(bno);
+        
+        // 1. 게시글 가져오기
+        BoardVO board = mapper.read(bno);
+        
+        // 2. 게시글에 해당하는 파일 목록 가져오기
+        List<FileVO> fileList = fileMapper.findByBno(bno);
+        board.setAttachList(fileList);
+        
+        // 3. 조회수 로직 (기존 유지)
+        if (readerId != null && !readerId.isEmpty()) {
+             // ... 기존 조회수 로직 ...
+        }
+        
+        return board;
     }
 
     @Override
