@@ -3,9 +3,35 @@
 
 <mapper namespace="com.koreait.www.repository.MemberMapper">
 
+    <resultMap type="com.koreait.www.domain.MemberVO" id="memberMap">
+        <id property="email" column="email"/>
+        <result property="email" column="email"/>
+        <result property="pwd" column="pwd"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="lastLogin" column="last_login"/>
+        <collection property="authList" resultMap="authMap"/>
+    </resultMap>
+    
+    <resultMap type="com.koreait.www.domain.AuthVO" id="authMap">
+        <result property="email" column="email"/>
+        <result property="auth" column="auth"/>
+    </resultMap>
+
+    <select id="read" resultMap="memberMap">
+        SELECT 
+            m.email, pwd, nick_name, reg_date, last_login, auth
+        FROM 
+            member m 
+        LEFT OUTER JOIN 
+            auth a ON m.email = a.email 
+        WHERE 
+            m.email = #{email}
+    </select>
+    
     <select id="login" resultType="MemberVO">
         SELECT * FROM member 
-        WHERE id = #{id} AND pw = #{pw}
+        WHERE email = #{email} AND pwd = #{pwd}
     </select>
 
 </mapper>

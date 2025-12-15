@@ -23,7 +23,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardMapper mapper;
     private final FileMapper fileMapper;
 
-    // [설정] 실제 파일 저장 경로 (사용자 환경에 맞춤)
+    // [설정] 실제 파일 저장 경로
     private final String UPLOAD_ROOT = "D:\\.Spotlight-V100\\some_nec_downloads\\spring\\spring2_saveuploadfiles";
 
     @Transactional
@@ -119,7 +119,7 @@ public class BoardServiceImpl implements BoardService {
         return mapper.getTotalCount(cri);
     }
 
-    // [헬퍼 메서드] 실제 파일 삭제
+    // 실제 파일 삭제
     private void deleteFileFromDisk(FileVO vo) {
         try {
             String path = UPLOAD_ROOT + File.separator + vo.getUploadPath() + File.separator + vo.getUuid() + "_" + vo.getFileName();

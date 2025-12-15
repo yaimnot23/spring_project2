@@ -74,12 +74,12 @@ public class BoardController {
         MemberVO member = (MemberVO) session.getAttribute("member");
         String readerId = null;
         if(member != null) {
-            readerId = member.getId();
+            readerId = member.getEmail();
         }
         model.addAttribute("board", service.get(bno, readerId));
     }
 	
-	// [수정] 파일 업로드와 삭제 요청을 동시에 처리
+	// 파일 업로드와 삭제 요청을 동시에 처리
 	@PostMapping("/modify")
 	public String modify(BoardVO board, 
 						 @RequestParam("uploadFiles") MultipartFile[] uploadFiles,

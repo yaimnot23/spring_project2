@@ -102,7 +102,36 @@ CREATE TABLE tbl_file (
     REFERENCES board (bno) ON DELETE CASCADE
 );
 
+-- 1. 기존 테이블이 있다면 삭제 (외래키 제약조건 때문에 자식 테이블인 auth부터 삭제)
+DROP TABLE IF EXISTS auth;
+DROP TABLE IF EXISTS member;
 
+-- 2. 회원 테이블 (member) 생성
+-- 컬럼: email(PK), pwd, nick_name, reg_date, last_login
+CREATE TABLE member (
+    email VARCHAR(100) NOT NULL,        -- 이메일 (Primary Key)
+    pwd VARCHAR(100) NOT NULL,          -- 비밀번호 (암호화 저장 예정)
+    nick_name VARCHAR(50) NOT NULL,     -- 닉네임
+    reg_date DATETIME DEFAULT NOW(),    -- 가입일
+    last_login DATETIME DEFAULT NULL,   -- 마지막 로그인 시간
+    PRIMARY KEY (email)
+);
+
+-- 3. 권한 테이블 (auth) 생성
+-- 컬럼: id(PK), email(FK), auth
+CREATE TABLE auth (
+    id INT AUTO_INCREMENT,              -- 고유 번호 (PK)
+    email VARCHAR(100) NOT NULL,        -- 회원 이메일 (FK)
+    auth VARCHAR(50) NOT NULL,          -- 권한 (ROLE_USER, ROLE_ADMIN 등)
+    PRIMARY KEY (id),
+    CONSTRAINT fk_auth_member FOREIGN KEY (email) REFERENCES member(email) ON DELETE CASCADE
+);
+
+-- 4. 테스트 데이터 넣기 (선택사항)
+-- 관리자 계정 하나 생성 (비밀번호 '1111' -> 암호화 안 된 상태이므로 나중에 문제될 수 있음, 일단 테스트용)
+INSERT INTO member (email, pwd, nick_name) VALUES ('admin@test.com', '1111', '관리자');
+INSERT INTO auth (email, auth) VALUES ('admin@test.com', 'ROLE_USER');
+INSERT INTO auth (email, auth) VALUES ('admin@test.com', 'ROLE_ADMIN');
 
 
 
