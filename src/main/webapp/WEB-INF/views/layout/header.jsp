@@ -59,6 +59,17 @@ prefix="c" %>
 
         <!-- 로그인 사용자 -->
         <sec:authorize access="isAuthenticated()">
+          <!-- 관리자 전용 메뉴 -->
+          <sec:authorize access="hasRole('ROLE_ADMIN')">
+            <li class="nav-item">
+              <a
+                class="nav-link text-warning fw-bold"
+                href="${pageContext.request.contextPath}/member/list"
+              >
+                <i class="fa-solid fa-users"></i> 회원목록
+              </a>
+            </li>
+          </sec:authorize>
           <li class="nav-item me-3">
             <span class="nav-link text-white">
               <!-- Principal에서 커스텀 필드 접근: principal.member.nickName -->

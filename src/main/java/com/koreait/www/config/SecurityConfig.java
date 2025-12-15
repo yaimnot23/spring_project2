@@ -38,6 +38,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         log.info("Security Configured...");
         
         http.authorizeRequests()
+            .antMatchers("/sample/all").permitAll()
+            .antMatchers("/sample/admin").access("hasRole('ROLE_ADMIN')")
+            .antMatchers("/sample/member").access("hasRole('ROLE_USER')")
+            .antMatchers("/member/list").access("hasRole('ROLE_ADMIN')") // 회원 목록은 관리자만
             .antMatchers("/board/register", "/board/modify", "/board/remove").authenticated()
             .anyRequest().permitAll();
             

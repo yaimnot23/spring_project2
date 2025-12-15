@@ -43,6 +43,10 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 						20971520);  // File Size Threshold: 20MB
 		
 		registration.setMultipartConfig(multipartConfig);
+		
+		// [404 에러 커스텀 처리를 위한 설정]
+		// 존재하지 않는 URL 요청 시 404 상태코드 대신 NoHandlerFoundException을 발생시킴
+		registration.setInitParameter("throwExceptionIfNoHandlerFound", "true");
 	}
 
 }

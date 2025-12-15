@@ -66,14 +66,35 @@ public class ReplyController {
     }
 
     // 3. 댓글 삭제 (DELETE)
+    // 3. 댓글 삭제 (DELETE)
     @DeleteMapping(value = "/{rno}", produces = { MediaType.TEXT_PLAIN_VALUE })
-    public ResponseEntity<String> remove(@PathVariable("rno") Long rno) {
+    public ResponseEntity<String> remove(@PathVariable("rno") Long rno, 
+                                         java.security.Principal principal,
+                                         javax.servlet.http.HttpServletRequest request) {
         log.info("remove: " + rno);
+        
+        if (principal == null) {
+        	return new ResponseEntity<>("Unauthenticated", HttpStatus.UNAUTHORIZED);
+        }
+        
+        ReplyVO vo = service.get(rno);
+        if (vo == null) {
+        	return new ResponseEntity<>("Not Found", HttpStatus.NOT_FOUND);
+        }
+        
+        boolean isReplyer = vo.getReplyer().equals(principal.getName());
+        boolean isAdmin = request.isUserInRole("ROLE_ADMIN");
+        
+        if (!isReplyer && !isAdmin) {
+        	return new ResponseEntity<>("Forbidden", HttpStatus.FORBIDDEN);
+        }
+        
         return service.remove(rno) == 1 
             ? new ResponseEntity<>("success", HttpStatus.OK)
             : new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
     
+    // 4. 댓글 수정 (PUT/PATCH)
     // 4. 댓글 수정 (PUT/PATCH)
     @RequestMapping(method = { RequestMethod.PUT, RequestMethod.PATCH }, 
             value = "/{rno}", 
@@ -81,9 +102,30 @@ public class ReplyController {
             produces = { MediaType.TEXT_PLAIN_VALUE })
     public ResponseEntity<String> modify(
             @RequestBody ReplyVO vo, 
-            @PathVariable("rno") Long rno) {
+            @PathVariable("rno") Long rno,
+            java.security.Principal principal,
+            javax.servlet.http.HttpServletRequest request) {
         
+    	if (principal == null) {
+        	return new ResponseEntity<>("Unauthenticated", HttpStatus.UNAUTHORIZED);
+        }
+    	
         vo.setRno(rno);
+        
+        ReplyVO original = service.get(rno);
+        if(original == null) {
+        	return new ResponseEntity<>("Not Found", HttpStatus.NOT_FOUND);
+        }
+        
+        boolean isReplyer = original.getReplyer().equals(principal.getName());
+        boolean isAdmin = request.isUserInRole("ROLE_ADMIN"); // 관리자도 수정 가능하게 할지? 보통 수정은 본인만. 삭제는 관리자도.
+        // 정책: 댓글 수정은 본인만 가능하도록 (관리자라도 남의 글 수정은 좀...)
+        // 하지만 요청대로 일단 관리자도 가능하게 둠 (삭제와 통일성 위해). 원치 않으면 isAdmin 제거.
+        
+        if (!isReplyer && !isAdmin) {
+        	return new ResponseEntity<>("Forbidden", HttpStatus.FORBIDDEN);
+        }
+        
         log.info("rno: " + rno);
         log.info("modify: " + vo);
 

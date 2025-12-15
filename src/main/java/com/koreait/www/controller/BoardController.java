@@ -88,12 +88,29 @@ public class BoardController {
 						 @RequestParam("uploadFiles") MultipartFile[] uploadFiles,
 						 @RequestParam(value = "removeFiles", required = false) List<String> removeFiles,
 						 java.security.Principal principal,
+						 javax.servlet.http.HttpServletRequest request,
 						 RedirectAttributes rttr) {
 		
-		if(principal != null) {
-			// 수정 권한 체크 로직이 Service나 여기서 필요할 수 있음. 
-			// 일단 작성자를 현재 유저로 덮어쓰거나 체크하는 로직이 있으면 좋지만, 기존 로직 유지하며 Principal 주입.
-			// board.setWriter(principal.getName()); // 보통 수정 시 작성자를 바꾸진 않으므로 생략하거나 검증용.
+		// 1. 유효성 검사 (로그인 여부)
+		if (principal == null) {
+			return "redirect:/member/login";
+		}
+		
+		// 2. 권한 검사 (작성자 또는 관리자만 수정 가능)
+		// DB에서 기존 게시글 정보 가져오기 (조회수 증가 없이)
+		BoardVO original = service.get(board.getBno(), null);
+		
+		if (original == null) {
+			return "redirect:/board/list";
+		}
+		
+		String username = principal.getName();
+		boolean isWriter = original.getWriter().equals(username);
+		boolean isAdmin = request.isUserInRole("ROLE_ADMIN");
+		
+		if (!isWriter && !isAdmin) {
+			rttr.addFlashAttribute("result", "unauthorized");
+			return "redirect:/board/list";
 		}
 		
 		log.info("modify 요청: " + board);
@@ -112,7 +129,32 @@ public class BoardController {
 	}
 	
 	@PostMapping("/remove")
-	public String remove(@RequestParam("bno") Long bno, RedirectAttributes rttr) {
+	public String remove(@RequestParam("bno") Long bno, 
+						 java.security.Principal principal,
+						 javax.servlet.http.HttpServletRequest request,
+						 RedirectAttributes rttr) {
+		
+		// 1. 유효성 검사 (로그인 여부)
+		if (principal == null) {
+			return "redirect:/member/login";
+		}
+		
+		// 2. 권한 검사 (작성자 또는 관리자만 삭제 가능)
+		BoardVO original = service.get(bno, null);
+		
+		if (original == null) {
+			return "redirect:/board/list";
+		}
+		
+		String username = principal.getName();
+		boolean isWriter = original.getWriter().equals(username);
+		boolean isAdmin = request.isUserInRole("ROLE_ADMIN");
+		
+		if (!isWriter && !isAdmin) {
+			rttr.addFlashAttribute("result", "unauthorized");
+			return "redirect:/board/list";
+		}
+		
 		if (service.remove(bno)) {
 			rttr.addFlashAttribute("result", "success");
 		}

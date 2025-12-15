@@ -5,4 +5,5 @@ import com.koreait.www.domain.MemberVO;
 public interface MemberService {
     int register(MemberVO mvo);
     MemberVO login(MemberVO member);
+    java.util.List<MemberVO> getList();
 }

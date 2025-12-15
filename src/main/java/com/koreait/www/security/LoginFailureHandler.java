@@ -21,7 +21,8 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
         log.warn("Login Failure caught: " + exception.getClass().getName());
         log.warn("Login Failure message: " + exception.getMessage());
         
-        request.setAttribute("msg", "Login Failed: " + exception.getMessage());
-        request.getRequestDispatcher("/member/login").forward(request, response);
+        // POST 요청을 그대로 forward 하면 컨트롤러 @GetMapping("/login")에서 405 발생 가능
+        // 따라서 Redirect 방식으로 변경
+        response.sendRedirect("/member/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), "UTF-8"));
     }
 }

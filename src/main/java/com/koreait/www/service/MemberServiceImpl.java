@@ -41,4 +41,10 @@ public class MemberServiceImpl implements MemberService {
         log.info("login service... " + member);
         return mapper.login(member);
     }
+    
+    @Override
+    public java.util.List<MemberVO> getList() {
+        log.info("getList service...");
+        return mapper.getList();
+    }
 }

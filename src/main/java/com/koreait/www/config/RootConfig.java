@@ -77,7 +77,7 @@ public class RootConfig {
 		SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
 		sessionFactory.setDataSource(dataSource());
 
-		// 1. MyBatis 메인 설정 파일 (s가 빠진 getResource -> 파일 1개)
+		// 1. MyBatis메인 설정 파일 (s가 빠진 getResource -> 파일 1개)
 		// 역할: 카멜케이스 자동 변환, 별칭(Alias) 설정 등을 모아둔 파일
 		sessionFactory.setConfigLocation(applicationContext.getResource("classpath:mybatis-config.xml"));
 

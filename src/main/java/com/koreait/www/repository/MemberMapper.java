@@ -12,4 +12,7 @@ public interface MemberMapper {
 
     int insert(MemberVO mvo);
     int insertAuth(AuthVO avo);
+    
+    // 전체 회원 목록 조회 (권한 포함)
+    java.util.List<MemberVO> getList();
 }

@@ -29,6 +29,16 @@
             m.email = #{email}
     </select>
     
+    <select id="getList" resultMap="memberMap">
+        SELECT 
+            m.email, pwd, nick_name, reg_date, last_login, auth
+        FROM 
+            member m 
+        LEFT OUTER JOIN 
+            auth a ON m.email = a.email
+        ORDER BY m.reg_date DESC
+    </select>
+    
     <select id="login" resultType="MemberVO">
         SELECT * FROM member 
         WHERE email = #{email} AND pwd = #{pwd}

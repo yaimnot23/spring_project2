@@ -55,4 +55,12 @@ public class MemberController {
         // 이 컨트롤러 메서드는 Security가 처리하지 않는 경우(예: GET 요청)에만 호출됨.
         return "redirect:/";
     }
+    
+    // 5. 회원 목록 (관리자 전용)
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/list")
+    public void list(org.springframework.ui.Model model) {
+    	log.info("회원 목록 요청 (관리자 전용)");
+    	model.addAttribute("list", service.getList());
+    }
 }
