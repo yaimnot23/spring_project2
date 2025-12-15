@@ -77,6 +77,46 @@ prefix="c" %> <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
                          BoardController에서 principal.getName()으로 덮어쓰고 있으므로 이 input은 보여주기용. -->
             </div>
 
+            <!-- [Ghost Mode] 비밀글 설정 -->
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <div class="form-check mt-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="isSecret"
+                    value="true"
+                    id="secretCheck"
+                  />
+                  <label class="form-check-label" for="secretCheck">
+                    <i class="fa-solid fa-lock"></i> 비밀글 설정
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-9">
+                <input
+                  type="password"
+                  class="form-control"
+                  name="password"
+                  id="secretPw"
+                  placeholder="비밀번호 (비밀글 설정 시 입력)"
+                  disabled
+                />
+              </div>
+            </div>
+            <script>
+              $("#secretCheck").change(function () {
+                if (this.checked) {
+                  $("#secretPw").prop("disabled", false).attr("required", true);
+                } else {
+                  $("#secretPw")
+                    .prop("disabled", true)
+                    .val("")
+                    .attr("required", false);
+                }
+              });
+            </script>
+
             <div class="mb-4">
               <div class="d-flex align-items-center mb-2">
                 <label class="form-label fw-bold me-2 mb-0">파일 첨부</label>
@@ -129,6 +169,31 @@ prefix="c" %> <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
         // 초기화 버튼 누르면 0으로 리셋
         $("button[type='reset']").on("click", function () {
           $("#fileCount").text("0");
+          localStorage.removeItem("auto_title");
+          localStorage.removeItem("auto_content");
+        });
+
+        // [Auto-Save] 자동 임시 저장
+        var autoTitle = localStorage.getItem("auto_title");
+        var autoContent = localStorage.getItem("auto_content");
+
+        if (autoTitle) $("input[name='title']").val(autoTitle);
+        if (autoContent) $("textarea[name='content']").val(autoContent);
+
+        $("input[name='title'], textarea[name='content']").on(
+          "input",
+          function () {
+            localStorage.setItem("auto_title", $("input[name='title']").val());
+            localStorage.setItem(
+              "auto_content",
+              $("textarea[name='content']").val()
+            );
+          }
+        );
+
+        $("form").on("submit", function () {
+          localStorage.removeItem("auto_title");
+          localStorage.removeItem("auto_content");
         });
       });
     </script>

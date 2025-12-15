@@ -104,11 +104,24 @@
                 <small class="text-muted">개발 지식과 경험을 공유하는 공간입니다.</small>
             </div>
             
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+            	
+            	<!-- [무한 스크롤 스위치] -->
+                <div class="form-check form-switch me-3">
+                    <input class="form-check-input" type="checkbox" id="infiniteSwitch">
+                    <label class="form-check-label" for="infiniteSwitch" style="white-space: nowrap;">∞ 무한 스크롤</label>
+                </div>
+            
                 <form id="searchForm" action="/board/list" method="get" class="d-flex">
                     <input type="hidden" name="pageNum" value="${pageMaker.cri.pageNum}">
                     <input type="hidden" name="amount" value="${pageMaker.cri.amount}">
                     
+                    <select name="sort" class="form-select me-2" style="width: 110px;">
+                        <option value="" ${empty pageMaker.cri.sort ? 'selected' : ''}>최신순</option>
+                        <option value="V" ${pageMaker.cri.sort == 'V' ? 'selected' : ''}>조회순</option>
+                        <option value="O" ${pageMaker.cri.sort == 'O' ? 'selected' : ''}>오래된순</option>
+                    </select>
+
                     <select name="type" class="form-select me-2" style="width: 100px;">
                         <option value="" ${empty pageMaker.cri.type ? 'selected' : ''}>--</option>
                         <option value="T" ${pageMaker.cri.type == 'T' ? 'selected' : ''}>제목</option>
@@ -134,7 +147,7 @@
             
             <c:forEach items="${list}" var="board">
                 <div class="col">
-                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}&pageNum=${pageMaker.cri.pageNum}&amount=${pageMaker.cri.amount}&type=${pageMaker.cri.type}&keyword=${pageMaker.cri.keyword}'">
+                    <div class="card h-100" onclick="location.href='${pageContext.request.contextPath}/board/get?bno=${board.bno}&pageNum=${pageMaker.cri.pageNum}&amount=${pageMaker.cri.amount}&type=${pageMaker.cri.type}&keyword=${pageMaker.cri.keyword}&sort=${pageMaker.cri.sort}'">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="writer-badge">
@@ -145,7 +158,12 @@
                                 </small>
                             </div>
                             
-                            <h5 class="card-title">${board.title}</h5>
+                            <h5 class="card-title">
+                                ${board.title}
+                                <c:if test="${board.readCount >= 10}">
+                                    <span class="badge bg-danger ms-2" style="font-size: 0.7rem;"><i class="fa-solid fa-fire"></i> HOT</span>
+                                </c:if>
+                            </h5>
                             <p class="card-text">${board.content}</p>
                         </div>
                         
@@ -220,24 +238,172 @@
             searchForm.submit();
         });
 
-        // 2. 검색 버튼 클릭 이벤트
-        $("#searchForm button").on("click", function(e){
-            
-            if(!searchForm.find("option:selected").val()){
-                alert("검색 종류를 선택하세요");
-                return false;
-            }
-
-            if(!searchForm.find("input[name='keyword']").val()){
-                alert("키워드를 입력하세요");
-                return false;
-            }
-
-            // 검색을 새로 하면 무조건 1페이지로 이동해야 함
+        // 3. 정렬 기준 변경 이벤트
+        $("select[name='sort']").on("change", function(e){
             searchForm.find("input[name='pageNum']").val("1");
-            e.preventDefault();
             searchForm.submit();
         });
+        
+        // [Live Search] 실시간 검색
+        var timer;
+        $("input[name='keyword']").on("keyup", function(){
+            var keyword = $(this).val();
+            var type = $("select[name='type']").val();
+            
+            if(keyword.length < 2 || type == "") return;
+            
+            if(timer) clearTimeout(timer);
+            timer = setTimeout(function(){
+                $.getJSON("/board/list_ajax", {
+                    pageNum: 1, 
+                    amount: 6, 
+                    type: type, 
+                    keyword: keyword,
+                    sort: $("select[name='sort']").val()
+                }, function(data){
+                    renderList(data.list);
+                });
+            }, 500);
+        });
+        
+        function renderList(list) {
+            var container = $(".row.row-cols-1"); 
+            var str = "";
+            
+            if(!list || list.length == 0) {
+                 str += '<div class="col-12 text-center py-5 my-5 bg-white rounded shadow-sm">';
+                 str += '  <i class="fa-regular fa-folder-open fa-3x text-secondary mb-3"></i>';
+                 str += '  <h5 class="text-muted">검색 결과가 없습니다.</h5>';
+                 str += '</div>';
+            } else {
+                $(list).each(function(i, board){
+                    var date = new Date(board.regDate);
+                    var dateStr = date.getFullYear() + "-" + 
+                                  ((date.getMonth()+1) < 10 ? '0' : '') + (date.getMonth()+1) + "-" + 
+                                  (date.getDate() < 10 ? '0' : '') + date.getDate();
+
+                    // Hot Badge Logic
+                    var hotBadge = board.readCount >= 10 ? '<span class="badge bg-danger ms-2"><i class="fa-solid fa-fire"></i> HOT</span>' : '';
+
+                    str += '<div class="col">';
+                    str += '    <div class="card h-100" onclick="location.href=\'/board/get?bno=' + board.bno + '\'">';
+                    str += '        <div class="card-body">';
+                    str += '            <div class="d-flex justify-content-between align-items-center mb-3">';
+                    str += '                <span class="writer-badge"><i class="fa-regular fa-user me-1"></i> ' + board.writer + '</span>';
+                    str += '                <small class="text-muted"><i class="fa-regular fa-eye me-1"></i> ' + board.readCount + '</small>';
+                    str += '            </div>';
+                    str += '            <h5 class="card-title">' + board.title + hotBadge + '</h5>';
+                    str += '            <p class="card-text">' + board.content + '</p>';
+                    str += '        </div>';
+                    str += '        <div class="card-footer">';
+                    str += '            <div class="d-flex justify-content-between align-items-center">';
+                    str += '                <span class="meta-text"><i class="fa-regular fa-clock me-1"></i> ' + dateStr + '</span>';
+                    str += '                <span class="text-primary fw-bold" style="font-size: 0.9rem;">Read More <i class="fa-solid fa-arrow-right ms-1"></i></span>';
+                    str += '            </div>';
+                    str += '        </div>';
+                    str += '    </div>';
+                    str += '</div>';
+                });
+            }
+            container.html(str);
+        }
+
+        // [Infinite Scroll] 무한 스크롤
+        var isInfinite = false;
+        var currentPage = 1;
+        var isLoading = false;
+        
+        // [Infinite Scroll] 무한 스크롤
+        var isInfinite = false;
+        var currentPage = 1;
+        var isLoading = false;
+        
+        // 무한 스크롤 토글 버튼 추가 (HTML에 직접 추가함)
+        
+        $("#infiniteSwitch").change(function(){
+            isInfinite = $(this).is(":checked");
+            if(isInfinite) {
+                $(".page-navigation").hide();
+                // 관찰 대상 추가
+                if($("#sentinel").length == 0) {
+                     $(".container.pb-5").append('<div id="sentinel" style="height: 20px;"></div>');
+                     observer.observe(document.getElementById('sentinel'));
+                }
+            } else {
+                $(".page-navigation").show();
+                if($("#sentinel").length > 0) {
+                    observer.unobserve(document.getElementById('sentinel'));
+                    $("#sentinel").remove();
+                }
+            }
+        });
+        
+        var observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting && !isLoading && isInfinite) {
+                    loadMore();
+                }
+            });
+        }, { threshold: 1.0 });
+        
+        function loadMore() {
+            isLoading = true;
+            currentPage++;
+            
+            var type = $("select[name='type']").val();
+            var keyword = $("input[name='keyword']").val();
+            var sort = $("select[name='sort']").val();
+            
+            $.getJSON("/board/list_ajax", {
+                pageNum: currentPage, 
+                amount: 6, 
+                type: type, 
+                keyword: keyword,
+                sort: sort
+            }, function(data){
+                if(data.list && data.list.length > 0) {
+                    appendList(data.list);
+                    isLoading = false;
+                } else {
+                    // 더 이상 데이터 없음
+                    observer.unobserve(document.getElementById('sentinel'));
+                    $("#sentinel").html('<p class="text-center text-muted mt-3">마지막 게시글입니다.</p>');
+                }
+            });
+        }
+        
+        function appendList(list) {
+            var container = $(".row.row-cols-1");
+            var str = "";
+            $(list).each(function(i, board){
+                var date = new Date(board.regDate);
+                var dateStr = date.getFullYear() + "-" + 
+                              ((date.getMonth()+1) < 10 ? '0' : '') + (date.getMonth()+1) + "-" + 
+                              (date.getDate() < 10 ? '0' : '') + date.getDate();
+                              
+                var hotBadge = board.readCount >= 10 ? '<span class="badge bg-danger ms-2"><i class="fa-solid fa-fire"></i> HOT</span>' : '';
+
+                str += '<div class="col">';
+                str += '    <div class="card h-100" onclick="location.href=\'/board/get?bno=' + board.bno + '\'">';
+                str += '        <div class="card-body">';
+                str += '            <div class="d-flex justify-content-between align-items-center mb-3">';
+                str += '                <span class="writer-badge"><i class="fa-regular fa-user me-1"></i> ' + board.writer + '</span>';
+                str += '                <small class="text-muted"><i class="fa-regular fa-eye me-1"></i> ' + board.readCount + '</small>';
+                str += '            </div>';
+                str += '            <h5 class="card-title">' + board.title + hotBadge + '</h5>';
+                str += '            <p class="card-text">' + board.content + '</p>';
+                str += '        </div>';
+                str += '        <div class="card-footer">';
+                str += '            <div class="d-flex justify-content-between align-items-center">';
+                str += '                <span class="meta-text"><i class="fa-regular fa-clock me-1"></i> ' + dateStr + '</span>';
+                str += '                <span class="text-primary fw-bold" style="font-size: 0.9rem;">Read More <i class="fa-solid fa-arrow-right ms-1"></i></span>';
+                str += '            </div>';
+                str += '        </div>';
+                str += '    </div>';
+                str += '</div>';
+            });
+            container.append(str);
+        }
 
     });
     </script>

@@ -22,4 +22,7 @@ public interface BoardService {
     List<BoardVO> getList(Criteria cri);
     
     int getTotal(Criteria cri);
+    
+    BoardVO getPrev(Long bno);
+    BoardVO getNext(Long bno);
 }

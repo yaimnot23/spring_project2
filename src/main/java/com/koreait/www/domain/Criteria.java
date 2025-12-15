@@ -10,6 +10,8 @@ public class Criteria {
     
     private String type;    // 검색 조건
     private String keyword; // 검색어
+    
+    private String sort; // 정렬 기준 (T:최신순, V:조회순, O:오래된순)
 
     // 기본 생성자: 1페이지, 6개씩 보여주기 설정
     public Criteria() {

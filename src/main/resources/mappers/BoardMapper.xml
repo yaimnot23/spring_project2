@@ -29,8 +29,8 @@
         <selectKey keyProperty="bno" order="AFTER" resultType="long">
             SELECT LAST_INSERT_ID()
         </selectKey>
-        INSERT INTO board (title, content, writer, read_count)
-        VALUES (#{title}, #{content}, #{writer}, 0)
+        INSERT INTO board (title, content, writer, read_count, is_secret, password)
+        VALUES (#{title}, #{content}, #{writer}, 0, #{isSecret}, #{password})
     </insert>
     
     <select id="read" resultType="BoardVO">
@@ -64,16 +64,46 @@
     </select>
     
     <select id="getList" resultType="BoardVO">
-        SELECT * FROM board 
+        SELECT 
+            bno, 
+            CASE WHEN is_secret = 1 THEN '🔒 비밀글입니다.' ELSE title END as title,
+            content,
+            writer,
+            reg_date,
+            reg_date,
+            read_count,
+            like_count,
+            is_secret
+        FROM board 
         WHERE bno > 0 
         <include refid="criteria"></include> 
-        ORDER BY bno DESC
+        
+        <choose>
+            <when test="sort == 'V'.toString()">
+                ORDER BY read_count DESC, bno DESC
+            </when>
+            <when test="sort == 'O'.toString()">
+                ORDER BY bno ASC
+            </when>
+            <otherwise>
+                ORDER BY bno DESC
+            </otherwise>
+        </choose>
+        
         LIMIT #{skip}, #{amount}
     </select>
 
     <select id="getTotalCount" resultType="int">
         SELECT count(*) FROM board WHERE bno > 0 
         <include refid="criteria"></include>
+    </select>
+    
+    <select id="getPrev" resultType="BoardVO">
+        SELECT * FROM board WHERE bno &lt; #{bno} ORDER BY bno DESC LIMIT 1
+    </select>
+    
+    <select id="getNext" resultType="BoardVO">
+        SELECT * FROM board WHERE bno &gt; #{bno} ORDER BY bno ASC LIMIT 1
     </select>
 
 </mapper>

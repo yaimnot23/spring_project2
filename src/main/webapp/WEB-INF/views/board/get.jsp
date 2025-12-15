@@ -19,6 +19,10 @@
 <meta name="_csrf" content="${_csrf.token}"/>
 <meta name="_csrf_header" content="${_csrf.headerName}"/>
 
+<!-- PDF Export Libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
     .container { margin-top: 30px; }
     /* 첨부파일 영역 스타일 */
@@ -49,9 +53,46 @@
                 <input class="form-control" name="title" value="${board.title}" readonly>
             </div>
             
-            <div class="mb-3">
-                <label class="form-label">내용</label>
-                <textarea class="form-control" rows="5" name="content" readonly>${board.content}</textarea>
+    <!-- [Ghost Mode] Locked UI -->
+    <c:if test="${locked}">
+        <div class="alert alert-warning text-center p-5">
+            <i class="fa-solid fa-lock fa-3x mb-3 text-secondary"></i>
+            <h4>비밀글입니다.</h4>
+            <p class="mb-4">작성자와 비밀번호를 아는 사람만 확인할 수 있습니다.</p>
+            <div class="d-flex justify-content-center">
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="password" class="form-control" id="unlockPw" placeholder="비밀번호 입력">
+                    <button class="btn btn-dark" id="unlockBtn">확인</button>
+                </div>
+            </div>
+        </div>
+        <script>
+        $("#unlockBtn").click(function(){
+            var pw = $("#unlockPw").val();
+            $.ajax({
+                url: "/board/unlock",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({bno: '${board.bno}', password: pw}),
+                success: function(res){
+                    if(res.success) {
+                        location.reload();
+                    } else {
+                        alert("비밀번호가 일치하지 않습니다.");
+                    }
+                }
+            });
+        });
+        </script>
+    </c:if>
+    
+    <c:if test="${!locked}">
+    
+    <div class="mb-3">
+        <label class="form-label">내용</label>
+                <!-- Hashtag 지원을 위해 textarea 대신 div 사용 -->
+                <div class="form-control" style="min-height: 150px; background-color: #e9ecef; white-space: pre-wrap;" id="boardContent">${board.content}</div>
+                <!-- <textarea class="form-control" rows="5" name="content" readonly>${board.content}</textarea> -->
             </div>
             
             <div class="mb-3">
@@ -90,9 +131,36 @@
                     </div>
                 </div>
             </c:if>
+            <div class="mt-4 d-flex justify-content-between">
+                <div>
+                   <button data-oper='modify' class="btn btn-primary">수정</button>
+                   <button data-oper='list' class="btn btn-secondary">목록</button>
+                   <button id="pdfBtn" class="btn btn-outline-danger"><i class="fa-regular fa-file-pdf"></i> PDF 저장</button>
+                   <button id="likeBtn" class="btn btn-outline-secondary ms-2">
+                        <i class="fa-regular fa-heart text-danger"></i> 
+                        <span id="likeCount">${board.likeCount}</span>
+                   </button>
+                </div>
+            </div>
+            
+            <!-- [Prev/Next Navigation] -->
             <div class="mt-4">
-                <button data-oper='modify' class="btn btn-primary">수정</button>
-                <button data-oper='list' class="btn btn-secondary">목록</button>
+                <ul class="list-group list-group-flush">
+                    <c:if test="${not empty prevBoard}">
+                        <li class="list-group-item">
+                            <i class="fa-solid fa-chevron-up me-2 text-muted"></i> 
+                            <span class="text-muted me-2">이전글</span>
+                            <a href="/board/get?bno=${prevBoard.bno}" class="text-decoration-none text-dark">${prevBoard.title}</a>
+                        </li>
+                    </c:if>
+                    <c:if test="${not empty nextBoard}">
+                        <li class="list-group-item">
+                            <i class="fa-solid fa-chevron-down me-2 text-muted"></i> 
+                            <span class="text-muted me-2">다음글</span>
+                            <a href="/board/get?bno=${nextBoard.bno}" class="text-decoration-none text-dark">${nextBoard.title}</a>
+                        </li>
+                    </c:if>
+                </ul>
             </div>
             
             <form id="operForm" action="/board/modify" method="get">
@@ -111,9 +179,10 @@
                     </sec:authorize>
                     
                     <sec:authorize access="isAuthenticated()">
-                    	<input type="text" class="form-control" id="replyer" value='<sec:authentication property="principal.member.nickName"/>' readonly style="width: 150px;">
+                    	<input type="text" class="form-control" id="replyer" value="${pageContext.request.userPrincipal.name}" readonly style="width: 150px;">
+                    	<!-- <input type="text" class="form-control" id="replyer" value='<sec:authentication property="principal.member.nickName"/>' readonly style="width: 150px;"> -->
                     	<!-- 실제 서버로 보낼 email (필요하다면 숨겨서 전송 or Controller에서 Principal로 처리) -->
-                    	<input type="hidden" id="replyerEmail" value='<sec:authentication property="principal.member.email"/>'>
+                    	<!-- <input type="hidden" id="replyerEmail" value='<sec:authentication property="principal.member.email"/>'> -->
                     </sec:authorize>
                     
                     <button id="addReplyBtn" class="btn btn-dark">등록</button>
@@ -122,6 +191,8 @@
 
             <ul class="list-group" id="replyList">
             </ul>
+            
+            </c:if> <!-- End locked check -->
             
         </div>
     </div>
@@ -132,8 +203,86 @@
 <script type="text/javascript">
 $(document).ready(function(){
     
+    // [Hashtag System] #해시태그 링크 변환
+    var contentDiv = $("#boardContent");
+    if(contentDiv.length > 0) {
+        var contentHtml = contentDiv.html();
+        if(contentHtml) {
+            var linkedContent = contentHtml.replace(/#(\S+)/g, '<a href="/board/list?type=TC&keyword=$1" class="text-decoration-none">#$1</a>');
+            contentDiv.html(linkedContent);
+            
+            // [Reading Time] 읽기 시간 계산
+            var textLength = contentDiv.text().trim().length;
+            var wpm = 500; // 한국어 기준 대략적인 분당 글자수
+            var time = Math.ceil(textLength / wpm);
+            $(".card-header").append(' <small class="text-muted ms-2"><i class="fa-regular fa-clock"></i> 예상 읽기: ' + time + '분</small>');
+        }
+    }
+
+    // [PDF Export] PDF 저장 Logic
+    $("#pdfBtn").on("click", function(){
+        html2canvas(document.querySelector(".card-body")).then(canvas => {
+            var imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            var doc = new jsPDF('p', 'mm', 'a4');
+            var imgWidth = 210; 
+            var imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            doc.save('board_${board.bno}.pdf');
+        });
+    });
+    
+    // [Like System] 좋아요 로직
+    var bno = "${board.bno}";
+    var liker = $("#replyer").val(); // 로그인 유저 ID (또는 닉네임)
+    var likeBtn = $("#likeBtn");
+    var likeIcon = likeBtn.find("i");
+    var likeCountSpan = $("#likeCount");
+    
+    // 1. 초기 상태 확인
+    if(liker) {
+        $.getJSON("/likes/check/" + bno + "/" + liker, function(data){
+            if(data.liked) {
+                likeIcon.removeClass("fa-regular").addClass("fa-solid");
+            }
+        });
+    }
+    
+    // 2. 클릭 이벤트
+    likeBtn.on("click", function(){
+        if(!liker) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        
+        $.ajax({
+            type: 'post',
+            url: '/likes/toggle',
+            data: JSON.stringify({bno: bno}),
+            contentType: "application/json; charset=utf-8",
+            success: function(result, status, xhr) {
+                if(result.status === "anonymous") {
+                    alert("로그인이 필요합니다.");
+                } else if (result.status === "success") {
+                    var currentCount = parseInt(likeCountSpan.text());
+                    if(result.liked) { // 좋아요 성공
+                        likeIcon.removeClass("fa-regular").addClass("fa-solid");
+                        likeCountSpan.text(currentCount + 1);
+                    } else { // 취소 성공
+                        likeIcon.removeClass("fa-solid").addClass("fa-regular");
+                        likeCountSpan.text(currentCount - 1);
+                    }
+                }
+            },
+            error: function(xhr, status, er) {
+                alert("좋아요 처리 에러");
+            }
+        });
+    });
+
     // ==========================================
-    // 1. 게시글 관련 버튼 이벤트 (수정, 목록)
+    // 1. 게시글 관련 버튼 이벤트 (수정, 목록, PDF)
     // ==========================================
     var operForm = $("#operForm");
 
@@ -172,18 +321,27 @@ $(document).ready(function(){
             }
 
             for (var i = 0, len = data.length || 0; i < len; i++) {
-                str += '<li class="list-group-item d-flex justify-content-between align-items-center">';
-                str += '  <div>';
-                str += '    <div class="fw-bold mb-1">' + data[i].replyer + ' <small class="text-muted fw-normal ms-2">' + displayTime(data[i].replyDate) + '</small></div>';
-                str += '    <span>' + data[i].reply + '</span>';
+                str += '<li class="list-group-item" data-rno="' + data[i].rno + '">';
+                str += '  <div class="d-flex justify-content-between align-items-center mb-1">';
+                str += '    <div class="fw-bold">' + data[i].replyer + ' <small class="text-muted fw-normal ms-2">' + displayTime(data[i].replyDate) + '</small></div>';
+                
+                // 로그인한 유저와 댓글 작성자가 같으면 수정/삭제 버튼 표시
+                // (주의: 화면상 닉네임 비교이므로 동명이인 문제 가능성 있음. 안전하게는 replyerEmail 비교 필요하나, 현재 구조상 닉네임으로 처리)
+                if (replyerVal && replyerVal === data[i].replyer) {
+                    str += '    <div>';
+                    str += '        <button class="btn btn-sm btn-outline-primary modifyBtn me-1" data-rno="' + data[i].rno + '">수정</button>';
+                    str += '        <button class="btn btn-sm btn-outline-danger removeBtn" data-rno="' + data[i].rno + '">삭제</button>';
+                    str += '    </div>';
+                }
                 str += '  </div>';
-                str += '  <button class="btn btn-sm btn-outline-danger removeBtn" data-rno="' + data[i].rno + '">삭제</button>';
+                str += '  <p class="mb-0 reply-content">' + data[i].reply + '</p>';
                 str += '</li>';
             }
             replyUL.html(str);
         });
     }
     
+    // ... displayTime 함수 제외 ...
     function displayTime(timeValue) {
         var today = new Date();
         var gap = today.getTime() - timeValue;
@@ -202,22 +360,17 @@ $(document).ready(function(){
             return [ yy, '/', (mm > 9 ? '' : '0') + mm, '/', (dd > 9 ? '' : '0') + dd ].join('');
         }
     }
+    
+    // 전역 변수 설정 (로그인한 유저 닉네임)
+    var replyerVal = $("#replyer").val();
 
     $("#addReplyBtn").on("click", function(e){
         var replyVal = $("#reply").val();
-        // 화면에는 닉네임이 보이지만, 실제 데이터는 email(ID)나 닉네임 중 정책에 따라 전송.
-        // 여기서는 Principal을 통해 Controller에서 처리하는 것이 가장 안전하지만, 
-        // 기존 Controller가 VO를 받으므로 값을 채워서 보냄.
-        // *주의: 화면에 보이는 닉네임(replyer)을 보낼지, 이메일(replyerEmail)을 보낼지 결정 필요.
-        // ReplyVO의 replyer가 DB의 writer 컬럼(varchar)에 매핑된다면 닉네임 사용 가능.
-        // 하지만 식별자라면 email 사용. 보통 닉네임을 표시하므로 닉네임 전송.
-        // 만약 'replyer' 필드가 DB 작성자 저장용이라면 닉네임을 보냄.
+        var replyerCurrent = $("#replyer").val(); // 재확인
         
-        var replyerVal = $("#replyer").val();
-         
         var reply = {
             reply: replyVal,
-            replyer: replyerVal,
+            replyer: replyerCurrent,
             bno: bnoValue
         };
         
@@ -240,6 +393,61 @@ $(document).ready(function(){
                 alert("등록 에러");
             }
         });
+    });
+
+    // 댓글 수정 버튼 클릭
+    replyUL.on("click", ".modifyBtn", function(e){
+        var li = $(this).closest("li");
+        var p = li.find(".reply-content");
+        var text = p.text();
+        
+        var str = '<div class="input-group mt-2">';
+        str += '<input type="text" class="form-control edit-input" value="' + text + '">';
+        str += '<button class="btn btn-primary saveBtn">저장</button>';
+        str += '<button class="btn btn-secondary cancelBtn">취소</button>';
+        str += '</div>';
+        
+        p.hide();
+        li.append(str);
+        $(this).hide(); // 수정 버튼 숨김
+    });
+    
+    // 댓글 수정 저장
+    replyUL.on("click", ".saveBtn", function(e){
+        var li = $(this).closest("li");
+        var rno = li.data("rno");
+        var replyContent = li.find(".edit-input").val();
+        var replyerCurrent = $("#replyer").val();
+        
+        var reply = { 
+            rno: rno, 
+            reply: replyContent,
+            replyer: replyerCurrent
+        };
+        
+        $.ajax({
+            type: 'put',
+            url: '/replies/' + rno,
+            data: JSON.stringify(reply),
+            contentType: "application/json; charset=utf-8",
+            success: function(result, status, xhr) {
+                if (result === "success") {
+                    alert("수정되었습니다.");
+                    showList();
+                }
+            },
+            error: function(xhr, status, er) {
+                alert("수정 실패");
+            }
+        });
+    });
+    
+    // 댓글 수정 취소
+    replyUL.on("click", ".cancelBtn", function(e){
+        var li = $(this).closest("li");
+        li.find(".input-group").remove();
+        li.find(".reply-content").show();
+        li.find(".modifyBtn").show();
     });
 
     replyUL.on("click", ".removeBtn", function(e){

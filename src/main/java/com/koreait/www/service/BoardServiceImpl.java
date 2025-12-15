@@ -118,6 +118,16 @@ public class BoardServiceImpl implements BoardService {
     public int getTotal(Criteria cri) {
         return mapper.getTotalCount(cri);
     }
+    
+    @Override
+    public BoardVO getPrev(Long bno) {
+        return mapper.getPrev(bno);
+    }
+
+    @Override
+    public BoardVO getNext(Long bno) {
+        return mapper.getNext(bno);
+    }
 
     // 실제 파일 삭제
     private void deleteFileFromDisk(FileVO vo) {

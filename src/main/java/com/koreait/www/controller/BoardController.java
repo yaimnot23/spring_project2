@@ -1,8 +1,11 @@
 package com.koreait.www.controller;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -12,7 +15,9 @@ import org.apache.tika.Tika;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,6 +53,15 @@ public class BoardController {
         int total = service.getTotal(cri);
         model.addAttribute("pageMaker", new PageDTO(cri, total));
     }
+    
+    @GetMapping(value = "/list_ajax", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> listAjax(Criteria cri) {
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        map.put("list", service.getList(cri));
+        map.put("pageMaker", new PageDTO(cri, service.getTotal(cri)));
+        return map;
+    }
 	
 	@GetMapping("/register")
 	public void register() {
@@ -74,12 +88,83 @@ public class BoardController {
 	}
 	
 	@GetMapping({"/get", "/modify"})
-    public void get(@RequestParam("bno") Long bno, Model model, java.security.Principal principal) {
+    public String get(@RequestParam("bno") Long bno, Model model, java.security.Principal principal, 
+                    javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) {
+        
         String readerId = null;
+        
         if(principal != null) {
             readerId = principal.getName(); // email
+        } else {
+            // 비회원: 쿠키 확인
+            javax.servlet.http.Cookie[] cookies = request.getCookies();
+            if(cookies != null) {
+                for(javax.servlet.http.Cookie c : cookies) {
+                    if(c.getName().equals("view_cookie")) {
+                        readerId = c.getValue();
+                        break;
+                    }
+                }
+            }
+            // 쿠키가 없으면 새로 생성 (24시간 유지)
+            if(readerId == null) {
+                readerId = UUID.randomUUID().toString();
+                javax.servlet.http.Cookie newCookie = new javax.servlet.http.Cookie("view_cookie", readerId);
+                newCookie.setPath("/");
+                newCookie.setMaxAge(60 * 60 * 24); 
+                response.addCookie(newCookie);
+            }
         }
+        
         model.addAttribute("board", service.get(bno, readerId));
+        // [Prev/Next Navigation] 이전글/다음글 추가
+        model.addAttribute("prevBoard", service.getPrev(bno));
+        model.addAttribute("nextBoard", service.getNext(bno));
+        
+        // [Ghost Mode] 비밀글 체크
+        BoardVO vo = (BoardVO) model.getAttribute("board");
+        if(vo != null && vo.isSecret()) {
+            boolean isAuthorized = false;
+            // 1. 작성자 본인 확인
+            if(readerId != null && readerId.equals(vo.getWriter())) { // writer가 email/id라고 가정
+               isAuthorized = true;
+            }
+            // 2. 관리자 확인
+            if(request.isUserInRole("ROLE_ADMIN")) {
+               isAuthorized = true;
+            }
+            // 3. 세션(비밀번호 인증) 확인
+            Boolean unlocked = (Boolean) request.getSession().getAttribute("unlocked_" + bno);
+            if(unlocked != null && unlocked) {
+               isAuthorized = true;
+            }
+            
+            if(!isAuthorized) {
+                vo.setContent(null); // 내용 숨김
+                model.addAttribute("locked", true);
+            }
+        }
+        
+        return "/board/get";
+    }
+    
+    // [Ghost Mode] 비밀번호 확인
+    @PostMapping(value = "/unlock", produces = "application/json")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Boolean> unlock(@RequestBody java.util.Map<String, String> params, javax.servlet.http.HttpSession session) {
+        Long bno = Long.parseLong(params.get("bno"));
+        String password = params.get("password");
+        
+        BoardVO vo = service.get(bno, null);
+        boolean success = vo != null && vo.getPassword() != null && vo.getPassword().equals(password);
+        
+        if(vo == null) {
+        	System.out.println("DEBUG: Service returned NULL for bno: " + bno);
+        }
+        
+        java.util.Map<String, Boolean> result = new java.util.HashMap<>();
+        result.put("success", success);
+        return result;
     }
 	
 	// 파일 업로드와 삭제 요청을 동시에 처리
