@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpSession;
+
 
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Controller;
@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.koreait.www.domain.BoardVO;
 import com.koreait.www.domain.Criteria;
 import com.koreait.www.domain.FileVO;
-import com.koreait.www.domain.MemberVO;
 import com.koreait.www.domain.PageDTO;
 import com.koreait.www.service.BoardService;
 
@@ -58,7 +57,12 @@ public class BoardController {
 	@PostMapping("/register")
 	public String register(BoardVO board, 
 						   @RequestParam("uploadFiles") MultipartFile[] uploadFiles, 
+						   java.security.Principal principal,
 						   RedirectAttributes rttr) {
+		
+		if (principal != null) {
+			board.setWriter(principal.getName()); // 안전하게 서버 측에서 작성자 설정
+		}
 		
 		log.info("register 등록 요청");
 		List<FileVO> fileList = processUpload(uploadFiles);
@@ -70,11 +74,10 @@ public class BoardController {
 	}
 	
 	@GetMapping({"/get", "/modify"})
-    public void get(@RequestParam("bno") Long bno, Model model, HttpSession session) {
-        MemberVO member = (MemberVO) session.getAttribute("member");
+    public void get(@RequestParam("bno") Long bno, Model model, java.security.Principal principal) {
         String readerId = null;
-        if(member != null) {
-            readerId = member.getEmail();
+        if(principal != null) {
+            readerId = principal.getName(); // email
         }
         model.addAttribute("board", service.get(bno, readerId));
     }
@@ -84,7 +87,14 @@ public class BoardController {
 	public String modify(BoardVO board, 
 						 @RequestParam("uploadFiles") MultipartFile[] uploadFiles,
 						 @RequestParam(value = "removeFiles", required = false) List<String> removeFiles,
+						 java.security.Principal principal,
 						 RedirectAttributes rttr) {
+		
+		if(principal != null) {
+			// 수정 권한 체크 로직이 Service나 여기서 필요할 수 있음. 
+			// 일단 작성자를 현재 유저로 덮어쓰거나 체크하는 로직이 있으면 좋지만, 기존 로직 유지하며 Principal 주입.
+			// board.setWriter(principal.getName()); // 보통 수정 시 작성자를 바꾸진 않으므로 생략하거나 검증용.
+		}
 		
 		log.info("modify 요청: " + board);
 		

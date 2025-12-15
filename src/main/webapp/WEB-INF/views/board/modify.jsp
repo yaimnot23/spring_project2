@@ -55,6 +55,7 @@
         <div class="card-body">
             
             <form role="form" action="/board/modify" method="post" enctype="multipart/form-data">
+            	<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                 
                 <input type="hidden" name="pageNum" value="${cri.pageNum }">
                 <input type="hidden" name="amount" value="${cri.amount }">

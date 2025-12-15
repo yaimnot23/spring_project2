@@ -34,4 +34,15 @@
         WHERE email = #{email} AND pwd = #{pwd}
     </select>
 
+
+    <insert id="insert">
+        INSERT INTO member (email, pwd, nick_name)
+        VALUES (#{email}, #{pwd}, #{nickName})
+    </insert>
+
+    <insert id="insertAuth">
+        INSERT INTO auth (email, auth)
+        VALUES (#{email}, #{auth})
+    </insert>
+
 </mapper>

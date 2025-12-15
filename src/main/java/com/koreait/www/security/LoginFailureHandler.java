@@ -18,7 +18,8 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException, ServletException {
         
-        log.warn("Login Failure");
+        log.warn("Login Failure caught: " + exception.getClass().getName());
+        log.warn("Login Failure message: " + exception.getMessage());
         
         request.setAttribute("msg", "Login Failed: " + exception.getMessage());
         request.getRequestDispatcher("/member/login").forward(request, response);

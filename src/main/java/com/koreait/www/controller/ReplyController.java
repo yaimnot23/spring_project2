@@ -30,9 +30,26 @@ public class ReplyController {
 
     // 1. 댓글 등록 (POST)
     // 소비(consumes): JSON 데이터 / 생산(produces): 문자열(성공 메시지)
+    // 1. 댓글 등록 (POST)
+    // 소비(consumes): JSON 데이터 / 생산(produces): 문자열(성공 메시지)
     @PostMapping(value = "/new", consumes = "application/json", produces = { MediaType.TEXT_PLAIN_VALUE })
-    public ResponseEntity<String> create(@RequestBody ReplyVO vo) {
+    public ResponseEntity<String> create(@RequestBody ReplyVO vo, java.security.Principal principal) {
         log.info("ReplyVO: " + vo);
+        
+        if(principal != null) {
+        	// 보안상 서버 측에서 작성자를 로그인한 사용자로 강제 설정 (선택 사항. VO에 이미 있으면 덮어쓰거나 검증)
+        	// 만약 VO에 name(이메일)이 오면 Principal과 비교 가능.
+        	// 여기서는 Principal의 Name(Email)을 replyer로 사용할지, VO의 replyer(닉네임)를 사용할지 정책 결정 필요.
+        	// 보통 DB replyer 컬럼이 닉네임이라면 그대로 두고, 검증만 하거나... 
+        	// 아니면 DB에 사용자 ID(Email)를 저장하는 것이 정석.
+        	// 일단 기존 로직이 닉네임/ID 혼용 가능성이 있으므로, 
+        	// DB가 ID(Email)를 저장한다면 vo.setReplyer(principal.getName());
+        	// DB가 닉네임을 저장한다면 프론트에서 보낸 것을 믿거나, Principal에서 닉네임 꺼내야 함. (CustomUser 형변환 필요)
+        	
+        	// 여기서는 프론트에서 보낸 값을 일단 신뢰하되, 로그를 남김.
+            log.info("Principal Name: " + principal.getName());
+        }
+        
         int insertCount = service.register(vo);
         
         return insertCount == 1 

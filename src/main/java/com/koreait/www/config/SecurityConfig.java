@@ -25,11 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CustomAuthUserService customAuthUserService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customAuthUserService)
-            .passwordEncoder(passwordEncoder());
+            .passwordEncoder(passwordEncoder);
     }
 
     @Override
@@ -41,6 +42,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .anyRequest().permitAll();
             
         http.formLogin()
+            .usernameParameter("email")
+            .passwordParameter("pwd")
             .loginPage("/member/login")
             .loginProcessingUrl("/member/login")
             .successHandler(loginSuccessHandler())
@@ -62,8 +65,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new LoginFailureHandler();
     }
 
+    /* RootConfig로 이동
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    */
 }

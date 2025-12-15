@@ -1,5 +1,6 @@
 package com.koreait.www.repository;
 
+import com.koreait.www.domain.AuthVO;
 import com.koreait.www.domain.MemberVO;
 
 public interface MemberMapper {
@@ -8,4 +9,7 @@ public interface MemberMapper {
     
     // Spring Security용 회원 조회 (권한 포함)
     MemberVO read(String email);
+
+    int insert(MemberVO mvo);
+    int insertAuth(AuthVO avo);
 }

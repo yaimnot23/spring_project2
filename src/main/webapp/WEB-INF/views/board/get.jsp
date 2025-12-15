@@ -11,8 +11,13 @@
 <link href="/resources/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
 <script src="/resources/js/bootstrap.bundle.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- CSRF Token -->
+<meta name="_csrf" content="${_csrf.token}"/>
+<meta name="_csrf_header" content="${_csrf.headerName}"/>
 
 <style>
     .container { margin-top: 30px; }
@@ -100,7 +105,17 @@
                 <h5><i class="fa-regular fa-comments"></i> 댓글</h5>
                 <div class="d-flex gap-2">
                     <input type="text" class="form-control" id="reply" placeholder="댓글 내용">
-                    <input type="text" class="form-control" id="replyer" placeholder="작성자" style="width: 150px;" value="${member.id}" readonly>
+                    
+                    <sec:authorize access="isAnonymous()">
+                   		<input type="text" class="form-control" id="replyer" placeholder="로그인 필요" style="width: 150px;" readonly>
+                    </sec:authorize>
+                    
+                    <sec:authorize access="isAuthenticated()">
+                    	<input type="text" class="form-control" id="replyer" value='<sec:authentication property="principal.member.nickName"/>' readonly style="width: 150px;">
+                    	<!-- 실제 서버로 보낼 email (필요하다면 숨겨서 전송 or Controller에서 Principal로 처리) -->
+                    	<input type="hidden" id="replyerEmail" value='<sec:authentication property="principal.member.email"/>'>
+                    </sec:authorize>
+                    
                     <button id="addReplyBtn" class="btn btn-dark">등록</button>
                 </div>
             </div>
@@ -133,6 +148,15 @@ $(document).ready(function(){
     });
     
     // 2. 댓글(Reply) 관련 기능 (Ajax)
+    
+    // CSRF 토큰 설정
+    var csrfToken = $("meta[name='_csrf']").attr("content");
+    var csrfHeader = $("meta[name='_csrf_header']").attr("content");
+    
+    $(document).ajaxSend(function(e, xhr, options) {
+        xhr.setRequestHeader(csrfHeader, csrfToken);
+    });
+    
     var bnoValue = '<c:out value="${board.bno}"/>';
     var replyUL = $("#replyList");
 
@@ -180,9 +204,20 @@ $(document).ready(function(){
     }
 
     $("#addReplyBtn").on("click", function(e){
+        var replyVal = $("#reply").val();
+        // 화면에는 닉네임이 보이지만, 실제 데이터는 email(ID)나 닉네임 중 정책에 따라 전송.
+        // 여기서는 Principal을 통해 Controller에서 처리하는 것이 가장 안전하지만, 
+        // 기존 Controller가 VO를 받으므로 값을 채워서 보냄.
+        // *주의: 화면에 보이는 닉네임(replyer)을 보낼지, 이메일(replyerEmail)을 보낼지 결정 필요.
+        // ReplyVO의 replyer가 DB의 writer 컬럼(varchar)에 매핑된다면 닉네임 사용 가능.
+        // 하지만 식별자라면 email 사용. 보통 닉네임을 표시하므로 닉네임 전송.
+        // 만약 'replyer' 필드가 DB 작성자 저장용이라면 닉네임을 보냄.
+        
+        var replyerVal = $("#replyer").val();
+         
         var reply = {
-            reply: $("#reply").val(),
-            replyer: $("#replyer").val(),
+            reply: replyVal,
+            replyer: replyerVal,
             bno: bnoValue
         };
         
