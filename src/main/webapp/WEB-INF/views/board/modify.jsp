@@ -95,10 +95,10 @@
                     <div class="uploadResult border">
                         <ul id="existingFileList">
                             <c:forEach items="${board.attachList}" var="file">
-                                <c:set var="thumbCallPath" value="/upload/${file.uploadPath}/s_${file.uuid}_${file.fileName}" />
+                                <c:set var="thumbCallPath" value="/display?fileName=${file.uploadPath}/s_${file.uuid}_${file.fileName}" />
                                 
                                 <li data-uuid="${file.uuid}" class="existing-file">
-                                    <button type="button" class="btn-delete" title="삭제">X</button>
+                                    <button type="button" class="btn-delete btn-delete-existing" title="삭제">X</button>
                                     <c:choose>
                                         <c:when test="${file.fileType}">
                                             <img src="${thumbCallPath}" alt="${file.fileName}">
@@ -142,12 +142,14 @@
 $(document).ready(function() {
     
     var formObj = $("form");
+    var fileInput = document.getElementById("newFileInput");
+    var dataTransfer = new DataTransfer(); // [New] 파일 관리용 객체
     
     // [초기화 로직] 페이지 로딩 시 현재 파일 개수 세팅
     updateTotalCount();
 
     // 1. 기존 파일 삭제 버튼 (X) 클릭 시
-    $(".uploadResult").on("click", ".btn-delete", function(e){
+    $(".uploadResult").on("click", ".btn-delete-existing", function(e){
         e.stopPropagation();
         e.preventDefault();
         
@@ -169,11 +171,103 @@ $(document).ready(function() {
         }
     });
     
-    // 2. 새 파일 선택(Input) 변경 시
-    $("#newFileInput").on("change", function() {
+    // 2. [New] 새 파일 선택(Input) 변경 시 (Preview 및 누적)
+    $("#newFileInput").on("change", function(e) {
+        var files = e.target.files;
+        
+        if(files != null && files.length > 0){
+        	for(var i=0; i<files.length; i++){
+        		dataTransfer.items.add(files[i]);
+        	}
+        	// Input 파일 갱신
+        	fileInput.files = dataTransfer.files;
+        	
+        	// Preview 렌더링
+        	renderNewFiles();
+        }
+        
         // [업데이트] 개수 갱신
         updateTotalCount();
     });
+    
+    // 3. [New] 새 파일 삭제 버튼 클릭 (Preview 상에서)
+    $(".uploadResult").on("click", ".btn-delete-new", function(e){
+    	e.stopPropagation();
+        e.preventDefault();
+        
+        var targetLi = $(this).closest("li");
+        var targetFileIndex = targetLi.data("idx");
+        
+        // DataTransfer에서 해당 인덱스의 파일 제거
+        // DataTransfer.items는 remove가 인덱스 기반이 아니거나 까다로우므로
+        // 새로운 DataTransfer를 만들어 옮겨담는 식(혹은 filter)으로 처리
+        var files = dataTransfer.files;
+        var newDataTransfer = new DataTransfer();
+        
+        for(var i=0; i<files.length; i++){
+        	// file의 lastModified 등으로 식별하거나, 단순 index 매핑
+        	// 여기서는 data-idx와 배열 인덱스를 일치시키기 위해 
+        	// 렌더링 시 부여한 idx와 비교 (주의: 중간 삭제 시 인덱스 밀림 문제)
+        	// -> 더 안전한 방법: file 객체 자체를 비교불가하므로, 
+        	// 매번 렌더링 후 삭제 시 해당 순번(li의 순서)을 기준으로 삭제
+        }
+        
+        // [수정 전략]: button 클릭 시점의 li index를 구한다.
+        // .new-file 클래스를 가진 li들 중에서 몇 번째인지 확인
+        var index = $(".new-file").index(targetLi);
+        
+        if(index > -1) {
+        	dataTransfer.items.remove(index);
+        	fileInput.files = dataTransfer.files;
+        	renderNewFiles(); // 재렌더링
+        	updateTotalCount();
+        }
+    });
+    
+    // [함수] 새 파일 렌더링
+    function renderNewFiles() {
+    	// 기존에 그려진 '새 파일' 프리뷰들을 모두 제거
+    	$(".new-file").remove();
+    	
+    	var files = dataTransfer.files;
+    	var ul = $("#existingFileList");
+    	
+    	for(var i=0; i<files.length; i++) {
+    		var file = files[i];
+    		var reader = new FileReader();
+    		
+    		// 클로저나 let 사용 필요
+    		(function(idx, f){
+    			reader.onload = function(e) {
+    				var li = $("<li>").addClass("new-file");
+    				
+    				var btn = $("<button>").attr("type", "button")
+    				                       .addClass("btn-delete btn-delete-new") // 스타일 공유, 식별자 분리
+    				                       .attr("title", "삭제")
+    				                       .text("X");
+    				
+    				var content = "";
+    				// 이미지 판별
+    				if(f.type.startsWith("image")) {
+    					content = $("<img>").attr("src", e.target.result).attr("alt", f.name);
+    				} else {
+    					content = $("<div>").css({
+    						"width": "100px", "height": "100px", 
+    						"background": "#e9ecef", "display": "flex", 
+    						"align-items": "center", "justify-content": "center", 
+    						"border-radius": "5px", "margin": "0 auto"
+    					}).html('<i class="fa-regular fa-file-lines fa-2x text-secondary"></i>');
+    				}
+    				
+    				var span = $("<span>").text(f.name);
+    				
+    				li.append(btn).append(content).append(span);
+    				ul.append(li);
+    			};
+    			reader.readAsDataURL(f);
+    		})(i, file);
+    	}
+    }
 
     // [함수] 전체 파일 개수 계산 및 업데이트
     function updateTotalCount() {
@@ -182,9 +276,8 @@ $(document).ready(function() {
         
         // 2. 새로 추가된 파일 개수
         var newCount = 0;
-        var input = document.getElementById("newFileInput");
-        if(input.files) {
-            newCount = input.files.length;
+        if(fileInput.files) {
+            newCount = fileInput.files.length;
         }
         
         // 3. 합계 표시

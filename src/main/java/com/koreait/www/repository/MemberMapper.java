@@ -15,4 +15,7 @@ public interface MemberMapper {
     
     // 전체 회원 목록 조회 (권한 포함)
     java.util.List<MemberVO> getList();
+    
+    // 마지막 로그인 시간 업데이트
+    int updateLastLogin(String email);
 }

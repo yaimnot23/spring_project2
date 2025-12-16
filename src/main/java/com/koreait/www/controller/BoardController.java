@@ -87,14 +87,16 @@ public class BoardController {
 		return "redirect:/board/list";
 	}
 	
-	@GetMapping({"/get", "/modify"})
+	@GetMapping("/get")
     public String get(@RequestParam("bno") Long bno, Model model, java.security.Principal principal, 
                     javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) {
         
         String readerId = null;
+        String username = null;
         
         if(principal != null) {
-            readerId = principal.getName(); // email
+        	username = principal.getName();
+            readerId = username; 
         } else {
             // 비회원: 쿠키 확인
             javax.servlet.http.Cookie[] cookies = request.getCookies();
@@ -116,17 +118,27 @@ public class BoardController {
             }
         }
         
-        model.addAttribute("board", service.get(bno, readerId));
+        BoardVO board = service.get(bno, readerId);
+        model.addAttribute("board", board);
+        
+        // [수정/삭제 권한 체크]
+        boolean canModify = false;
+        if(username != null) {
+        	if(board.getWriter().equals(username) || request.isUserInRole("ROLE_ADMIN")) {
+        		canModify = true;
+        	}
+        }
+        model.addAttribute("canModify", canModify);
+
         // [Prev/Next Navigation] 이전글/다음글 추가
         model.addAttribute("prevBoard", service.getPrev(bno));
         model.addAttribute("nextBoard", service.getNext(bno));
         
         // [Ghost Mode] 비밀글 체크
-        BoardVO vo = (BoardVO) model.getAttribute("board");
-        if(vo != null && vo.isSecret()) {
+        if(board != null && board.isSecret()) {
             boolean isAuthorized = false;
             // 1. 작성자 본인 확인
-            if(readerId != null && readerId.equals(vo.getWriter())) { // writer가 email/id라고 가정
+            if(username != null && username.equals(board.getWriter())) { 
                isAuthorized = true;
             }
             // 2. 관리자 확인
@@ -140,12 +152,36 @@ public class BoardController {
             }
             
             if(!isAuthorized) {
-                vo.setContent(null); // 내용 숨김
+            	board.setContent(null); // 내용 숨김
                 model.addAttribute("locked", true);
             }
         }
         
         return "/board/get";
+    }
+    
+    @GetMapping("/modify")
+    public String modify(@RequestParam("bno") Long bno, Model model, java.security.Principal principal, javax.servlet.http.HttpServletRequest request) {
+    	
+    	// 1. 로그인 체크
+    	if(principal == null) {
+    		return "redirect:/member/login";
+    	}
+    	
+    	BoardVO board = service.get(bno, null); // 조회수 증가 X
+    	
+    	if(board == null) {
+    		return "redirect:/board/list";
+    	}
+    	
+    	// 2. 권한 체크 (작성자 OR 관리자)
+    	String username = principal.getName();
+    	if(!board.getWriter().equals(username) && !request.isUserInRole("ROLE_ADMIN")) {
+    		return "redirect:/board/list";
+    	}
+    	
+    	model.addAttribute("board", board);
+    	return "/board/modify";
     }
     
     // [Ghost Mode] 비밀번호 확인
@@ -210,7 +246,7 @@ public class BoardController {
 		if (service.modify(board, removeFiles)) {
 			rttr.addFlashAttribute("result", "success");
 		}
-		return "redirect:/board/list";
+		return "redirect:/board/get?bno=" + board.getBno();
 	}
 	
 	@PostMapping("/remove")
@@ -258,6 +294,7 @@ public class BoardController {
 			
 			FileVO fileVO = new FileVO();
 			String originalFileName = multipartFile.getOriginalFilename();
+			
 			originalFileName = originalFileName.substring(originalFileName.lastIndexOf("\\") + 1);
 			
 			fileVO.setFileName(originalFileName);
@@ -268,7 +305,7 @@ public class BoardController {
 			
 			try {
 				String mimeType = tika.detect(multipartFile.getInputStream());
-				
+			
 				if(mimeType != null && (
 				   mimeType.contains("application/x-msdownload") || 
 				   mimeType.contains("application/x-sh") ||

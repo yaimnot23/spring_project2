@@ -16,11 +16,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
+	private com.koreait.www.service.MemberService service;
+	
+	public LoginSuccessHandler() {}
+	
+	public LoginSuccessHandler(com.koreait.www.service.MemberService service) {
+		this.service = service;
+	}
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         
         log.warn("Login Success");
+        
+        // [Last Login Update]
+        String email = authentication.getName();
+        if(service != null) {
+        	service.updateLastLogin(email);
+        }
         
         List<String> roleNames = new ArrayList<>();
         

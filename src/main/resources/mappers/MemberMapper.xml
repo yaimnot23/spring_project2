@@ -55,4 +55,10 @@
         VALUES (#{email}, #{auth})
     </insert>
 
+    <update id="updateLastLogin">
+        UPDATE member 
+        SET last_login = now() 
+        WHERE email = #{email}
+    </update>
+
 </mapper>

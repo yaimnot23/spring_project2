@@ -106,8 +106,8 @@
                     <div class="uploadResult border p-3">
                         <ul>
                             <c:forEach items="${board.attachList}" var="file">
-                                <c:set var="fileCallPath" value="/upload/${file.uploadPath}/${file.uuid}_${file.fileName}" />
-                                <c:set var="thumbCallPath" value="/upload/${file.uploadPath}/s_${file.uuid}_${file.fileName}" />
+                                <c:set var="fileCallPath" value="/display?fileName=${file.uploadPath}/${file.uuid}_${file.fileName}" />
+                                <c:set var="thumbCallPath" value="/display?fileName=${file.uploadPath}/s_${file.uuid}_${file.fileName}" />
                                 
                                 <li>
                                     <c:if test="${file.fileType}">
@@ -133,7 +133,9 @@
             </c:if>
             <div class="mt-4 d-flex justify-content-between">
                 <div>
-                   <button data-oper='modify' class="btn btn-primary">수정</button>
+                   <c:if test="${canModify}">
+                       <button data-oper='modify' class="btn btn-primary">수정</button>
+                   </c:if>
                    <button data-oper='list' class="btn btn-secondary">목록</button>
                    <button id="pdfBtn" class="btn btn-outline-danger"><i class="fa-regular fa-file-pdf"></i> PDF 저장</button>
                    <button id="likeBtn" class="btn btn-outline-secondary ms-2">

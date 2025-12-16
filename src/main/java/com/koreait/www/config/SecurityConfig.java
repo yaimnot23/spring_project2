@@ -26,6 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CustomAuthUserService customAuthUserService;
     private final PasswordEncoder passwordEncoder;
+    private final com.koreait.www.service.MemberService memberService; // [New] 의존성 주입
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -61,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public AuthenticationSuccessHandler loginSuccessHandler() {
-        return new LoginSuccessHandler();
+        return new LoginSuccessHandler(memberService);
     }
     
     @Bean

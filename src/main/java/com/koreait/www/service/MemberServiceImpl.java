@@ -47,4 +47,10 @@ public class MemberServiceImpl implements MemberService {
         log.info("getList service...");
         return mapper.getList();
     }
+
+    @Override
+    public int updateLastLogin(String email) {
+        log.info("updateLastLogin..." + email);
+        return mapper.updateLastLogin(email);
+    }
 }
